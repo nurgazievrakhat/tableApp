@@ -1,0 +1,58 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  # Быстрая проверка на Linux: типы и сборка бандлов. Нативный модуль здесь не
+  # нужен, поэтому postinstall пропускаем — он тянет пересборку better-sqlite3.
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Проверка типов
+        run: npx tsc --noEmit
+      - name: Сборка бандлов
+        run: npx vite build
+
+  # Установщик собирается только здесь: better-sqlite3 — нативный модуль, и с
+  # macOS или Linux собрать его под Windows нельзя.
+  windows:
+    needs: check
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Установка зависимостей
+        run: npm ci
+
+      - name: Сборка установщика
+        run: npm run dist:win
+
+      - name: Артефакт
+        uses: actions/upload-artifact@v4
+        with:
+          name: TableEasy-setup
+          path: release/*.exe
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Релиз по тегу
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release/*.exe
+          generate_release_notes: true

@@ -1,0 +1,313 @@
+:root {
+  --bg: #12141a;
+  --card: #1a1d26;
+  --border: #262b38;
+  --text: #e4e7ee;
+  --muted: #838b9e;
+  --accent: #6ea8fe;
+  --ok: #4ade80;
+  --warn: #fbbf24;
+  --err: #f87171;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 14px/1.5 -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+.screen { max-width: 1000px; margin: 0 auto; padding: 32px 24px 48px; }
+
+.head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 24px; }
+.head h1 { font-size: 20px; margin: 0; letter-spacing: -0.01em; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 18px 20px;
+  margin-bottom: 16px;
+}
+.card h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em;
+           color: var(--muted); margin: 0 0 14px; font-weight: 600; }
+.card.error { border-color: var(--err); }
+.card.error h2 { color: var(--err); }
+
+dl { display: grid; grid-template-columns: auto 1fr; gap: 8px 20px; margin: 0; }
+dt { color: var(--muted); white-space: nowrap; }
+dd { margin: 0; }
+
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--border); }
+th { color: var(--muted); font-weight: 500; font-size: 12px;
+     text-transform: uppercase; letter-spacing: 0.05em; }
+tbody tr:last-child td { border-bottom: none; }
+.num { text-align: right; }
+
+.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 13px; }
+.wrap { word-break: break-all; }
+.muted { color: var(--muted); }
+.ok { color: var(--ok); }
+.warn { color: var(--warn); }
+
+pre { white-space: pre-wrap; word-break: break-word; color: var(--err); margin: 0; }
+
+footer { margin-top: 8px; font-size: 13px; }
+
+/* --- этап 2: превью прайса --- */
+
+.toolbar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+
+button {
+  font: inherit;
+  color: var(--text);
+  background: #232838;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 7px 14px;
+  cursor: pointer;
+}
+button:hover:not(:disabled) { background: #2b3145; border-color: #38405a; }
+button:disabled { opacity: 0.5; cursor: default; }
+
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.tab { padding: 5px 12px; background: transparent; }
+.tab.active { background: #2b3145; border-color: var(--accent); color: #fff; }
+
+.badge {
+  display: inline-block;
+  background: #23324d;
+  border: 1px solid #33456b;
+  border-radius: 6px;
+  padding: 2px 8px;
+  margin: 0 6px 6px 0;
+  font-size: 12px;
+}
+.badge.dim { background: #262b38; border-color: var(--border); color: var(--muted); }
+
+.hint { margin: -6px 0 12px; font-size: 13px; }
+
+.scroll { overflow-x: auto; max-height: 460px; overflow-y: auto; }
+
+table.sheet { border-collapse: collapse; font-size: 12px; white-space: nowrap; }
+table.sheet td {
+  border: 1px solid var(--border);
+  padding: 4px 8px;
+  max-width: 230px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+table.sheet td.rowno {
+  position: sticky; left: 0;
+  background: var(--card);
+  color: var(--muted);
+  text-align: right;
+  min-width: 46px;
+}
+table.sheet tr.headerRow td {
+  background: #23324d;
+  color: #fff;
+  font-weight: 600;
+  vertical-align: bottom;
+}
+table.sheet tr.headerRow td.rowno { background: #23324d; }
+.role {
+  display: block;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent);
+  font-weight: 500;
+}
+tr.chosen td { background: #1e2740; }
+
+.head nav { margin-left: auto; }
+
+/* --- этап 3: маппинг колонок --- */
+
+.form { display: flex; gap: 22px; flex-wrap: wrap; margin-bottom: 16px; }
+.form label { display: flex; flex-direction: column; gap: 5px; font-size: 12px; }
+.form label > span { color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+input, select {
+  font: inherit;
+  font-size: 13px;
+  color: var(--text);
+  background: #1f2431;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 9px;
+}
+input:focus, select:focus { outline: none; border-color: var(--accent); }
+input[type='number'] { width: 110px; }
+.form input[list] { width: 230px; }
+
+table.mapping { font-size: 13px; }
+table.mapping td, table.mapping th { padding: 5px 10px; }
+table.mapping tr.assigned td { background: #1c2436; }
+table.mapping select { width: 100%; max-width: 190px; }
+.ellipsis { max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.toolbar.save { margin-top: 14px; gap: 16px; }
+.hint.ok { color: var(--ok); }
+.hint.warn { color: var(--warn); }
+.badge.ok-badge { background: #1c3326; border-color: #2c5a3d; color: var(--ok); margin: 0; }
+
+/* --- этап 4: импорт --- */
+
+dl.result {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px 20px;
+  margin-bottom: 14px;
+}
+dl.result dt { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
+dl.result dd { font-size: 17px; }
+.accent { color: var(--accent); }
+
+/* --- этап 5: поиск --- */
+
+input.search {
+  width: 100%;
+  font-size: 16px;
+  padding: 11px 14px;
+  margin-bottom: 12px;
+}
+
+.filters { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.chip { padding: 4px 12px; border-radius: 14px; font-size: 12px; background: transparent; }
+.chip.on { background: #23324d; border-color: var(--accent); color: #fff; }
+.inline { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+.inline input[type='number'] { width: 84px; padding: 4px 8px; }
+
+.scroll.tall { max-height: 62vh; }
+
+table.results { font-size: 13px; width: 100%; }
+table.results th { position: sticky; top: 0; background: var(--card); z-index: 1; }
+table.results td { padding: 6px 10px; vertical-align: top; }
+table.results tr:hover td { background: #1c2130; }
+table.results tr.inactive td { opacity: 0.45; }
+td.supplier { color: var(--accent); white-space: nowrap; font-size: 12px; }
+td.promo { white-space: nowrap; }
+.pct { display: block; font-size: 10px; color: var(--muted); }
+.trend { font-size: 10px; margin-left: 4px; }
+.trend.up { color: var(--err); }
+.trend.down { color: var(--ok); }
+.tag {
+  display: inline-block; margin-left: 8px; padding: 1px 6px;
+  font-size: 10px; border-radius: 4px;
+  background: #3a2a2a; color: var(--warn);
+}
+table.results th { white-space: nowrap; }
+
+/* --- этап 6: источники --- */
+
+table.sources { font-size: 13px; width: 100%; }
+table.sources td { padding: 8px 10px; vertical-align: middle; }
+table.sources th { white-space: nowrap; }
+.size { font-size: 11px; }
+.note {
+  display: block; margin-top: 3px; font-size: 11px; color: var(--ok);
+}
+td.actions { white-space: nowrap; text-align: right; }
+button.small { padding: 4px 10px; font-size: 12px; margin-left: 6px; }
+button.small.danger { color: var(--err); border-color: #4a2b2b; }
+button.small.danger:hover:not(:disabled) { background: #3a2323; }
+.err-text { color: var(--err); }
+
+/* --- этап 7: автоподхват --- */
+
+table.folders td, table.pending td, table.events td {
+  padding: 7px 10px; font-size: 13px; vertical-align: middle;
+}
+.path { font-size: 12px; }
+table.events td.time { width: 60px; }
+table.events tr td:nth-child(2) { white-space: nowrap; width: 120px; font-size: 12px; }
+.note.warn { color: var(--warn); }
+
+/* --- этап 8: сравнение цен --- */
+
+.sep { width: 1px; height: 18px; background: var(--border); margin: 0 4px; }
+
+table.grouped tr.group { cursor: pointer; }
+table.grouped tr.group td { border-bottom: 1px solid var(--border); }
+table.grouped tr.group:hover td { background: #1c2130; }
+table.grouped tr.group.single td { opacity: 0.62; }
+td.caret { width: 20px; color: var(--muted); }
+.offers-count {
+  display: block; font-size: 11px; color: var(--muted); margin-top: 2px;
+}
+.best { color: var(--ok); font-weight: 600; }
+.spread { color: var(--muted); font-size: 12px; }
+.spread.big { color: var(--warn); font-weight: 600; }
+
+table.grouped tr.offer td {
+  background: #171b26; border-bottom: 1px solid var(--border);
+  font-size: 12px; padding-top: 4px; padding-bottom: 4px;
+}
+.offer-name { padding-left: 12px !important; }
+.art {
+  display: inline-block; margin-left: 8px; padding: 0 5px;
+  font-size: 10px; border-radius: 3px; background: #262b38; color: var(--muted);
+}
+.over { color: var(--err); font-size: 11px; }
+.unit-warn {
+  margin-left: 8px; padding: 0 6px; border-radius: 3px;
+  background: #3a2f1c; color: var(--warn); font-size: 10px;
+}
+table.grouped td.unit { color: var(--muted); }
+tr.suggest td { padding: 10px 12px 12px 12px !important; }
+.suggest-head { font-size: 11px; color: var(--warn); margin-bottom: 8px; }
+.suggest-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 4px 0; font-size: 12px;
+}
+.suggest-title { flex: 1; }
+
+/* --- этап 9: история цен --- */
+
+tr.clickable { cursor: pointer; }
+
+.overlay {
+  position: fixed; inset: 0; background: rgba(8, 10, 14, 0.72);
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 48px 20px; overflow-y: auto; z-index: 50;
+}
+.panel {
+  position: relative; width: 100%; max-width: 560px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 24px 26px 22px;
+}
+.close {
+  position: absolute; top: 12px; right: 12px;
+  width: 28px; height: 28px; padding: 0; line-height: 1;
+  font-size: 18px; color: var(--muted); background: transparent; border: none;
+}
+.close:hover { color: var(--text); background: #262b38; }
+
+.item-title { font-size: 16px; margin: 0 0 6px; text-transform: none; letter-spacing: 0; color: var(--text); }
+.item-sub { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; font-size: 12px; }
+.panel h3 {
+  font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--muted); margin: 22px 0 10px; font-weight: 600;
+}
+dl.item-facts { grid-template-columns: 130px 1fr; gap: 7px 16px; }
+dl.item-facts .contents { display: contents; }
+.big { font-size: 18px; }
+.promo-raw {
+  margin: 14px 0 0; padding: 8px 11px; border-radius: 7px;
+  background: #23324d; font-size: 12px; color: var(--accent);
+}
+
+.chart { width: 100%; height: auto; margin: 4px 0 10px; }
+.chart-label { fill: var(--text); font-size: 10px; }
+.chart-axis { fill: var(--muted); font-size: 9px; }
+
+table.changes { font-size: 12px; }
+table.changes td { padding: 4px 8px; border-bottom: none; }
+.source-line { margin: 20px 0 0; font-size: 11px; }
