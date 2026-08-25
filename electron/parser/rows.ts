@@ -1,9 +1,10 @@
 import { createHash } from 'node:crypto'
-import type { Field } from './columns.ts'
+import { headerScore, type Field } from './columns.ts'
 import { cellText, isBlank, parseNumber } from './values.ts'
 import { normalizeName, normalizeArticle, normalizeUnit } from './normalize.ts'
 import { parsePromo, type Promo } from './promo.ts'
 import { parseExpiry } from './expiry.ts'
+import { isSameHeader, MIN_HEADER_SCORE } from './detectHeader.ts'
 
 export interface ParsedItem {
   rowNo: number
@@ -25,7 +26,7 @@ export interface ParsedItem {
   extraText: string | null
 }
 
-export type SkipReason = 'empty' | 'category' | 'noName'
+export type SkipReason = 'empty' | 'category' | 'noName' | 'repeatedHeader'
 
 export interface SkippedRow {
   rowNo: number
@@ -44,6 +45,8 @@ export interface ExtractResult {
 export interface ExtractOptions {
   grid: unknown[][]
   headers: string[]
+  /** Строка заголовков — нужна, чтобы узнавать её повторы ниже по листу. */
+  headerRow?: number
   dataStartRow: number
   columns: Partial<Record<Field, number>>
   priceMultiplier?: number
@@ -57,6 +60,9 @@ export function extractRows(opts: ExtractOptions): ExtractResult {
 
   const nameCol = columns.name
   if (nameCol === undefined) throw new Error('Не назначена колонка наименования')
+
+  const headerCells = opts.headerRow !== undefined ? (grid[opts.headerRow] ?? []) : []
+  const mappedCols = Object.values(columns).filter((c): c is number => c !== undefined)
 
   const mapped = new Set(Object.values(columns))
   const extraCols = headers
@@ -81,6 +87,17 @@ export function extractRows(opts: ExtractOptions): ExtractResult {
       skipped.push({ rowNo, reason: 'empty', text: '' })
       continue
     }
+
+    // Повтор шапки внутри таблицы. Без этой проверки в базу приезжает товар
+    // с названием «Наименование» и без цены.
+    if (headerCells.length > 0 && isSameHeader(row, headerCells, mappedCols)) {
+      skipped.push({ rowNo, reason: 'repeatedHeader', text: cellText(row[nameCol]) })
+      continue
+    }
+
+    // Чужая шапка — начало другой таблицы. Читать дальше нельзя: у листа
+    // может быть продолжение, не имеющее к прайсу отношения.
+    if (headerCells.length > 0 && headerScore(row) >= MIN_HEADER_SCORE) break
 
     const name = cellText(at(row, 'name'))
     if (name === '') {

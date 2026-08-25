@@ -1,9 +1,16 @@
-import { classifyHeader, headerScore, type ColumnMap } from './columns.ts'
+import { classifyHeader, headerScore, normHeader, type ColumnMap } from './columns.ts'
 import { isBlank, parseNumber } from './values.ts'
 
 /** Минимальная уверенность, чтобы строку вообще считать кандидатом в заголовки. */
-const MIN_HEADER_SCORE = 18
-/** Сколько подряд «не-товарных» строк терпим внутри таблицы (категории, пустые). */
+export const MIN_HEADER_SCORE = 18
+/**
+ * Сколько подряд содержательных «не-товарных» строк терпим внутри таблицы —
+ * заголовков разделов, примечаний.
+ *
+ * Пустые строки в этот счёт не идут: они ничего не говорят о том, что таблица
+ * кончилась. У «Лектос» посреди прайса стоят 19 пустых строк подряд, и по
+ * прежнему правилу блок обрывался на них, теряя 763 позиции из 1320.
+ */
 const MAX_GAP = 12
 
 export interface HeaderCandidate {
@@ -21,6 +28,35 @@ export interface HeaderDetection {
   chosen: HeaderCandidate | null
   /** Все кандидаты, отсортированы как рассматривались. Показываем в UI. */
   candidates: HeaderCandidate[]
+}
+
+/**
+ * Та же самая шапка, повторённая ниже по листу.
+ *
+ * Поставщики дублируют строку заголовков через каждые несколько десятков
+ * строк — чтобы её было видно при прокрутке и на печати. Такая строка не
+ * начинает новую таблицу, а продолжает текущую: в прайсе Бимед-Фарма
+ * нумерация позиций проходит через повтор насквозь.
+ */
+export function isSameHeader(
+  row: unknown[],
+  header: unknown[],
+  /** Колонки, которые реально размечены. Если заданы, сверяем только их. */
+  cols?: number[],
+): boolean {
+  // Сверять всю строку целиком нельзя: у «Лектос» одна и та же шапка в разных
+  // секциях идёт то с колонкой «Уп», то без неё. Значимо совпадение тех
+  // колонок, которые мы читаем, — это и есть структура таблицы.
+  if (cols && cols.length >= 2) {
+    return cols.every((c) => {
+      const a = normHeader(row[c])
+      return a !== '' && a === normHeader(header[c])
+    })
+  }
+
+  const a = row.map(normHeader).filter((x) => x !== '')
+  const b = header.map(normHeader).filter((x) => x !== '')
+  return a.length > 0 && a.length === b.length && a.every((x, i) => x === b[i])
 }
 
 /** Дёшево отсекаем строки данных до дорогой проверки по словарю. */
@@ -47,6 +83,8 @@ function measureDataRun(
   headerRow: number,
   map: ColumnMap,
 ): { rows: number; lastRow: number } {
+  const headerCells = grid[headerRow] ?? []
+  const mappedCols = Object.values(map.fields).filter((c): c is number => c !== undefined)
   const nameCol = map.fields.name
   const priceCol = map.fields.price
   if (nameCol === undefined) return { rows: 0, lastRow: headerRow }
@@ -58,7 +96,10 @@ function measureDataRun(
   for (let r = headerRow + 1; r < grid.length; r++) {
     const row = grid[r] ?? []
 
-    // Новая шапка — конец текущей таблицы.
+    // Повтор той же шапки — не конец таблицы, а служебная строка внутри неё.
+    if (isSameHeader(row, headerCells, mappedCols)) continue
+
+    // Другая шапка — начало другой таблицы.
     if (!looksNumeric(row) && headerScore(row) >= MIN_HEADER_SCORE) break
 
     const hasName = !isBlank(row[nameCol])
@@ -71,6 +112,8 @@ function measureDataRun(
       hits++
       lastRow = r
       gap = 0
+    } else if (row.every(isBlank)) {
+      continue
     } else if (++gap > MAX_GAP) {
       break
     }

@@ -2,6 +2,7 @@ import type {
   SheetSummary, SheetPreview, CandidateInfo, SheetWindow,
 } from '../electron/parser/protocol.ts'
 import type { ColumnMap, Field } from '../electron/parser/columns.ts'
+import type { ColumnCheck } from '../electron/parser/validate.ts'
 import type { Supplier } from '../electron/db/repo/suppliers.ts'
 import type { Mapping, MappingLookup, SaveMappingInput } from '../electron/db/repo/mappings.ts'
 import type { ImportResult } from '../electron/db/repo/imports.ts'
@@ -17,7 +18,7 @@ import type { WatchState, WatchedFolder } from '../electron/watcher/watcher.ts'
 import type { PendingFile, WatchEvent } from '../electron/watcher/pipeline.ts'
 
 export type {
-  SheetSummary, SheetPreview, CandidateInfo, ColumnMap, Field, SheetWindow,
+  SheetSummary, SheetPreview, CandidateInfo, ColumnMap, Field, SheetWindow, ColumnCheck,
   Supplier, Mapping, MappingLookup, SaveMappingInput, ImportResult,
   SearchQuery, SearchResult, SearchHit, Correction, Source, SourceStatus,
   ProductGroup, GroupedResult, LinkStats, MatchSuggestion,

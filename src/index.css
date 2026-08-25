@@ -539,3 +539,10 @@ table.events td.kind { width: 140px; white-space: nowrap; }
 table.results tbody tr:nth-child(even) td,
 table.sources tbody tr:nth-child(even) td { background: var(--panel-alt); }
 table.results tbody tr.clickable:hover td { background: var(--accent-soft); }
+.col-warn {
+  display: block; margin-top: var(--s1);
+  padding: 1px var(--s2); border-radius: var(--radius);
+  background: var(--warn-soft); color: var(--warn);
+  font-size: var(--fs-sm); font-weight: 500; white-space: normal;
+}
+table.mapping td.ellipsis { max-width: 320px; }

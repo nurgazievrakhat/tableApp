@@ -1,5 +1,18 @@
 import * as XLSX from 'xlsx'
+import * as cptable from 'xlsx/dist/cpexcel.full.mjs'
 import fs from 'node:fs'
+
+/**
+ * Таблица кодовых страниц для старых .xls.
+ *
+ * BIFF хранит строки в кодировке, указанной в записи CODEPAGE. Без этой
+ * таблицы SheetJS читает их как Latin-1, и «ОсОО "БИМЕД Фарм"» превращается
+ * в «ÎñÎÎ "ÁÈÌÅÄ Ôàðì"». Детектор заголовков после такого не находит ничего:
+ * он ищет «Наименование», а в ячейке абракадабра.
+ *
+ * Из шести присланных прайсов три оказались в CP1251.
+ */
+XLSX.set_cptable(cptable)
 import { detectHeader, forceHeader, type HeaderDetection } from './detectHeader.ts'
 
 export interface SheetSummary {

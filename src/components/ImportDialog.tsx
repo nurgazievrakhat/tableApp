@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
-import type { Field, ImportOutcome, Mapping, OpenedFile, SheetPreview, Supplier } from '@shared/types'
+import type {
+  ColumnCheck, Field, ImportOutcome, Mapping, OpenedFile, SheetPreview, Supplier,
+} from '@shared/types'
 import { FIELD_LABEL, FIELD_ORDER, REQUIRED_FIELDS } from '../fields.ts'
 import SheetViewer from './SheetViewer.tsx'
 import { useModal } from '../useModal.ts'
@@ -140,6 +142,13 @@ export default function ImportDialog({
     }
   }
 
+  // Замечания показываем только для колонок, которые пользователь не трогал:
+  // проверка сделана по автоматической разметке, а он мог уже всё поправить.
+  const problems = new Map<number, ColumnCheck>()
+  for (const c of preview?.checks ?? []) {
+    if (!c.ok && columns[c.field] === c.col) problems.set(c.col, c)
+  }
+
   const missing = REQUIRED_FIELDS.filter((f) => columns[f] === undefined)
   const ready = file && preview && supplierName.trim() !== '' && missing.length === 0
   const example = preview ? exampleRow(preview) : null
@@ -162,6 +171,14 @@ export default function ImportDialog({
           <div className="body">
             {error && <pre>{error}</pre>}
             {busy && !preview && <div className="muted">Читаю файл…</div>}
+
+            {problems.size > 0 && (
+              <p className="hint warn">
+                Заголовок колонки расходится с тем, что под ней лежит. Так бывает,
+                когда подписи в прайсе перепутаны местами — проверьте отмеченные
+                строки и поправьте роль вручную.
+              </p>
+            )}
 
             {ambiguous.length > 0 && (
               <p className="hint warn">

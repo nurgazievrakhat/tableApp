@@ -1,5 +1,6 @@
 import type { ColumnMap, Field } from './columns.ts'
 import type { ParsedItem, SkippedRow } from './rows.ts'
+import type { ColumnCheck } from './validate.ts'
 
 export interface SheetSummary { name: string; rows: number; cols: number }
 
@@ -22,6 +23,8 @@ export interface SheetPreview {
   dataStartRow: number | null
   map: ColumnMap | null
   candidates: CandidateInfo[]
+  /** Сверка разметки с данными: заголовок может врать (см. validate.ts). */
+  checks: ColumnCheck[]
   /** Окно строк для показа: индекс первой строки и сами строки как текст. */
   sampleFrom: number
   sample: string[][]

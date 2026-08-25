@@ -8,6 +8,7 @@ import path from 'node:path'
 import { readWorkbook, listSheets, readSheet } from './readWorkbook.ts'
 import { cellText } from './values.ts'
 import { headerSignature } from './signature.ts'
+import { validateMapping } from './validate.ts'
 import { extractRows } from './rows.ts'
 import { detectPriceDate } from './priceDate.ts'
 import type {
@@ -63,6 +64,10 @@ function buildPreview(
   }
 
   const headerCells = d.headerRow === null ? [] : (sheet.grid[d.headerRow] ?? [])
+  const checks =
+    d.map && d.dataStartRow !== null
+      ? validateMapping(sheet.grid, d.dataStartRow, d.map.fields, sheet.cols)
+      : []
 
   return {
     sheet: sheetName,
@@ -70,6 +75,7 @@ function buildPreview(
     cols: sheet.cols,
     signature: d.headerRow === null ? null : headerSignature(headerCells),
     headers: Array.from({ length: sheet.cols }, (_, c) => cellText(headerCells[c])),
+    checks,
     headerRow: d.headerRow,
     dataStartRow: d.dataStartRow,
     map: d.map,
@@ -98,7 +104,7 @@ function buildExtract(
   )
 
   const res = extractRows({
-    grid: sheet.grid, headers, dataStartRow, columns, priceMultiplier,
+    grid: sheet.grid, headers, headerRow, dataStartRow, columns, priceMultiplier,
   })
   const st = fs.statSync(file)
   const pd = detectPriceDate(

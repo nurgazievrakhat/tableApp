@@ -50,6 +50,9 @@ const PATTERNS: { field: Field; re: RegExp; weight: number }[] = [
   { field: 'price', re: /^цена(?![а-яa-z])/, weight: 9 },
   { field: 'price', re: /^(оптов|розничн)/, weight: 8 },
   { field: 'price', re: /(?:^|\s)цена(?![а-яa-z])/, weight: 5 },
+  // Цены по форме оплаты: «Наличный», «Безналичный», «Нал.», «Б/нал».
+  { field: 'price', re: /^(наличн|безналичн|нал|безнал|б\s*нал)(?![а-яa-z])/, weight: 8 },
+  { field: 'price', re: /^(наличн|безналичн)/, weight: 8 },
 
   // Артикул
   { field: 'article', re: /^(артикул|код|sku|арт)$/, weight: 10 },
@@ -59,9 +62,12 @@ const PATTERNS: { field: Field; re: RegExp; weight: number }[] = [
   { field: 'unit', re: /^(ед изм|ед|единица|единица измерения)$/, weight: 10 },
   { field: 'unit', re: /^ед(?![а-яa-z])/, weight: 7 },
 
-  // Остаток
+  // Остаток. Осторожно с «налич»: «наличие» — это склад, а «наличный» —
+  // форма оплаты, и такая колонка содержит цену. У «Прима Интернэшнл» весь
+  // прайс держится на колонке «Наличный», и приняв её за остаток, приложение
+  // осталось бы вовсе без цен.
   { field: 'stock', re: /^(остаток|наличие|склад|кол во|количество)$/, weight: 10 },
-  { field: 'stock', re: /^(остат|налич)/, weight: 8 },
+  { field: 'stock', re: /^(остат|наличие|в наличии)/, weight: 8 },
 
   // Производитель
   { field: 'manufacturer', re: /^(производитель|изготовитель|страна|бренд)$/, weight: 10 },
@@ -72,6 +78,8 @@ const PATTERNS: { field: Field; re: RegExp; weight: number }[] = [
   { field: 'expiry', re: /^(срок годности|годен до)$/, weight: 10 },
   { field: 'expiry', re: /^срок годн/, weight: 9 },
   { field: 'expiry', re: /^ср\s*год/, weight: 8 },
+  // «Срок» без уточнения: в прайсе рядом с датами это всегда срок годности.
+  { field: 'expiry', re: /^срок$/, weight: 7 },
 
   // Акция
   { field: 'promo', re: /^(акция|скидка)$/, weight: 10 },
