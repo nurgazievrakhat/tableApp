@@ -29,6 +29,11 @@ jobs:
   windows:
     needs: check
     runs-on: windows-latest
+    # Токену по умолчанию дан только доступ на чтение, а шагу «Релиз по тегу»
+    # нужно создать релиз. Право выдано точечно этой задаче, а не всему
+    # workflow.
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
