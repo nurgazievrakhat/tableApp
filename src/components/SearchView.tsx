@@ -102,7 +102,8 @@ export default function SearchView() {
 
   return (
     <>
-      <section className="card">
+      <section className="panel-box">
+        <div className="body">
         <input
           ref={inputRef}
           className="search"
@@ -111,7 +112,20 @@ export default function SearchView() {
           onChange={(e) => setText(e.target.value)}
         />
 
-        <div className="filters">
+        <div className="toolbar">
+          <div className="segmented" role="group" aria-label="Режим показа">
+            <button className={grouped ? '' : 'on'} onClick={() => setGrouped(false)}>
+              Список
+            </button>
+            <button
+              className={grouped ? 'on' : ''}
+              onClick={() => setGrouped(true)}
+              title="Одна строка на товар, цены всех поставщиков рядом"
+            >
+              Сравнение цен
+            </button>
+          </div>
+          <span className="sep" />
           {suppliers.map((s) => (
             <button
               key={s.id}
@@ -122,12 +136,12 @@ export default function SearchView() {
             </button>
           ))}
           <label className="inline">
-            до
+            цена до
             <input
               type="number"
               value={maxPrice}
-              placeholder="цена"
               onChange={(e) => setMaxPrice(e.target.value)}
+              style={{ width: 90 }}
             />
           </label>
           <label className="inline">
@@ -139,15 +153,6 @@ export default function SearchView() {
             показывать снятые с прайса
           </label>
 
-          <span className="sep" />
-
-          <button
-            className={grouped ? 'chip on' : 'chip'}
-            onClick={() => setGrouped((v) => !v)}
-            title="Одна строка на товар, цены всех поставщиков рядом"
-          >
-            сравнение цен
-          </button>
           {grouped && (
             <label className="inline">
               <input
@@ -177,6 +182,7 @@ export default function SearchView() {
             {corrected && <span className="warn"> · исправлено: {corrected}</span>}
           </p>
         )}
+        </div>
       </section>
 
       {groups && groups.groups.length > 0 && (
@@ -188,7 +194,7 @@ export default function SearchView() {
       )}
 
       {result && result.hits.length > 0 && (
-        <section className="card">
+        <section className="panel-box">
           <div className="scroll tall">
             <table className="results">
               <thead>
@@ -252,7 +258,8 @@ export default function SearchView() {
       {openItem !== null && <ItemCard itemId={openItem} onClose={() => setOpenItem(null)} />}
 
       {!view && (
-        <section className="card">
+        <section className="panel-box">
+          <div className="body">
           <p className="muted">
             Поиск идёт сразу по всем импортированным прайсам. Порядок слов не важен,
             дозировку можно писать и слитно, и через пробел. Опечатки исправляются
@@ -262,6 +269,7 @@ export default function SearchView() {
             Режим <b>сравнения цен</b> схлопывает одинаковый товар разных поставщиков
             в одну строку и показывает, у кого дешевле.
           </p>
+          </div>
         </section>
       )}
     </>

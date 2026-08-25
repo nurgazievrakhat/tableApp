@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { ItemDetail, PriceChange } from '@shared/types'
+import SheetViewer from './SheetViewer.tsx'
+import { useModal } from '../useModal.ts'
 
 const money = (v: number | null) =>
   v === null ? '—' : v.toLocaleString('ru-RU', { maximumFractionDigits: 2 })
@@ -83,23 +85,25 @@ function PriceChart({ changes }: { changes: PriceChange[] }) {
 export default function ItemCard({ itemId, onClose }: { itemId: number; onClose: () => void }) {
   const [detail, setDetail] = useState<ItemDetail | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [viewing, setViewing] = useState(false)
 
   useEffect(() => {
     setDetail(null)
     window.api.itemDetail(itemId).then(setDetail).catch((e: Error) => setError(e.message))
   }, [itemId])
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
+  useModal(onClose, !viewing)
 
   return (
+    <>
     <div className="overlay" onClick={onClose}>
       <div className="panel" onClick={(e) => e.stopPropagation()}>
-        <button className="close" onClick={onClose} title="Закрыть (Esc)">×</button>
+        <header>
+          <span className="grow">Карточка позиции</span>
+          <button className="close" onClick={onClose} title="Закрыть (Esc)">×</button>
+        </header>
 
+        <div className="body">
         {error && <pre>{error}</pre>}
         {!detail && !error && <div className="muted">Загрузка…</div>}
 
@@ -165,11 +169,30 @@ export default function ItemCard({ itemId, onClose }: { itemId: number; onClose:
             )}
 
             <p className="source-line muted" title={detail.filePath}>
-              Источник: {detail.fileName} · лист {detail.sheet} · строка {detail.rowNo ?? '—'}
+              <span className="grow">
+                Источник: {detail.fileName} · лист {detail.sheet} · строка {detail.rowNo ?? '—'}
+              </span>
+              <button className="small" onClick={() => setViewing(true)}>
+                Показать в файле
+              </button>
             </p>
           </>
         )}
+        </div>
       </div>
     </div>
+
+    {viewing && detail && (
+      <SheetViewer
+        target={{
+          path: detail.filePath,
+          fileName: detail.fileName,
+          sheet: detail.sheet,
+          row: detail.rowNo,
+        }}
+        onClose={() => setViewing(false)}
+      />
+    )}
+    </>
   )
 }

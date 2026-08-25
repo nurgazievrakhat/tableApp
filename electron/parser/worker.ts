@@ -10,7 +10,9 @@ import { cellText } from './values.ts'
 import { headerSignature } from './signature.ts'
 import { extractRows } from './rows.ts'
 import { detectPriceDate } from './priceDate.ts'
-import type { ParseRequest, ParseResponse, SheetPreview, ExtractPayload } from './protocol.ts'
+import type {
+  ParseRequest, ParseResponse, SheetPreview, ExtractPayload, SheetWindow,
+} from './protocol.ts'
 import type * as XLSX from 'xlsx'
 
 const DEFAULT_SAMPLE_ROWS = 40
@@ -99,6 +101,37 @@ function buildExtract(
   return { ...res, priceDate: pd.date, priceDateSource: pd.source }
 }
 
+/**
+ * Окно строк листа для просмотра. Лист целиком в интерфейс не отдаём: у
+ * Неман-Фарма это 5930 строк на 11 колонок, а у кого-то будет и сотня тысяч.
+ */
+function buildWindow(
+  file: string,
+  sheetName: string,
+  from: number,
+  count: number,
+  headerRow?: number,
+): SheetWindow {
+  const sheet = readSheet(load(file), sheetName, headerRow)
+  const start = Math.max(0, Math.min(from, Math.max(0, sheet.rows - 1)))
+  const end = Math.min(sheet.grid.length, start + Math.max(1, count))
+
+  const rows: string[][] = []
+  for (let r = start; r < end; r++) {
+    const row = sheet.grid[r] ?? []
+    rows.push(Array.from({ length: sheet.cols }, (_, c) => cellText(row[c])))
+  }
+
+  return {
+    sheet: sheetName,
+    from: start,
+    rows,
+    total: sheet.rows,
+    cols: sheet.cols,
+    headerRow: sheet.detection.headerRow,
+  }
+}
+
 function handle(req: ParseRequest): ParseResponse {
   try {
     switch (req.type) {
@@ -107,6 +140,11 @@ function handle(req: ParseRequest): ParseResponse {
           id: req.id, ok: true, type: 'listSheets',
           sheets: listSheets(load(req.path)),
           file: path.basename(req.path),
+        }
+      case 'rows':
+        return {
+          id: req.id, ok: true, type: 'rows',
+          window: buildWindow(req.path, req.sheet, req.from, req.count, req.headerRow),
         }
       case 'extract':
         return {

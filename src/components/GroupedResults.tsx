@@ -45,7 +45,10 @@ function Group({
 
   return (
     <>
-      <tr className={single ? 'group single' : 'group'} onClick={() => setOpen((v) => !v)}>
+      <tr
+        className={single ? 'group single clickable' : 'group clickable'}
+        onClick={() => setOpen((v) => !v)}
+      >
         <td className="caret">{open ? '▾' : '▸'}</td>
         <td>
           {group.title}
@@ -140,12 +143,14 @@ export default function GroupedResults({
   onOpenItem: (itemId: number) => void
 }) {
   return (
-    <section className="card">
-      <p className="hint muted">
-        Одна строка — один товар. Разворачивается в предложения поставщиков;
-        самое дешёвое подсвечено.
-        {result.onlyMulti && ' Показаны только товары, которые есть больше чем у одного поставщика.'}
-      </p>
+    <section className="panel-box">
+      <div className="body">
+        <p className="hint">
+          Одна строка — один товар. Разворачивается в предложения поставщиков;
+          самое дешёвое подсвечено.
+          {result.onlyMulti && ' Показаны только товары, которые есть больше чем у одного поставщика.'}
+        </p>
+      </div>
       <div className="scroll tall">
         <table className="results grouped">
           <thead>

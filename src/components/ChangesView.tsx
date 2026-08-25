@@ -40,9 +40,10 @@ export default function ChangesView() {
 
   return (
     <>
-      <section className="card">
-        <h2>Что изменилось в ценах</h2>
-        <div className="filters">
+      <section className="panel-box">
+        <header>Что изменилось в ценах</header>
+        <div className="body">
+        <div className="toolbar">
           {PERIODS.map((p) => (
             <button
               key={p.label}
@@ -93,13 +94,16 @@ export default function ChangesView() {
             )}
           </p>
         )}
+        </div>
       </section>
 
       {report && report.rows.length > 0 && (
-        <section className="card">
-          <p className="hint muted">
-            Сначала самые заметные изменения. Строка открывает карточку позиции.
-          </p>
+        <section className="panel-box">
+          <div className="body">
+            <p className="hint">
+              Сначала самые заметные изменения. Строка открывает карточку позиции.
+            </p>
+          </div>
           <div className="scroll tall">
             <table className="results">
               <thead>
@@ -114,7 +118,11 @@ export default function ChangesView() {
               </thead>
               <tbody>
                 {report.rows.map((r, i) => (
-                  <tr key={`${r.itemId}-${r.at}-${i}`} onClick={() => setOpenItem(r.itemId)}>
+                  <tr
+                    key={`${r.itemId}-${r.at}-${i}`}
+                    className="clickable"
+                    onClick={() => setOpenItem(r.itemId)}
+                  >
                     <td className="num mono muted">{date(r.at)}</td>
                     <td className="supplier">{r.supplierName}</td>
                     <td>{r.name}</td>

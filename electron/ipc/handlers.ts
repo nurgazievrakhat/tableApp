@@ -1,7 +1,7 @@
 import { ipcMain, app, dialog, BrowserWindow } from 'electron'
 import path from 'node:path'
 import { getStatus } from '../db/connection.ts'
-import { listSheets, readSheet } from '../parser/service.ts'
+import { listSheets, readSheet, readRows } from '../parser/service.ts'
 import { listSuppliers, findOrCreateSupplier } from '../db/repo/suppliers.ts'
 import { listMappings, findMapping, saveMapping } from '../db/repo/mappings.ts'
 import { search, searchGrouped } from '../db/repo/search.ts'
@@ -20,7 +20,7 @@ import type {
   AppInfo, DbStatus, OpenedFile, SheetPreview,
   Supplier, Mapping, MappingLookup, SaveMappingInput, ImportOutcome,
   SearchQuery, SearchResult, GroupedResult, LinkStats, MatchSuggestion,
-  ItemDetail, ChangesQuery, ChangesReport,
+  ItemDetail, ChangesQuery, ChangesReport, SheetWindow,
 } from '@shared/types'
 
 async function describe(file: string): Promise<OpenedFile> {
@@ -58,6 +58,13 @@ export function registerIpcHandlers(): void {
     'parser:sheet',
     (_e, file: string, sheet: string, opts?: { headerRow?: number }): Promise<SheetPreview> =>
       readSheet(file, sheet, opts ?? {}),
+  )
+
+  ipcMain.handle(
+    'parser:rows',
+    (
+      _e, file: string, sheet: string, from: number, count: number, headerRow?: number,
+    ): Promise<SheetWindow> => readRows(file, sheet, from, count, headerRow),
   )
 
   ipcMain.handle('suppliers:list', (): Supplier[] => listSuppliers())

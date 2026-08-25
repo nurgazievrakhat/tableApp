@@ -1,4 +1,6 @@
-import type { SheetSummary, SheetPreview, CandidateInfo } from '../electron/parser/protocol.ts'
+import type {
+  SheetSummary, SheetPreview, CandidateInfo, SheetWindow,
+} from '../electron/parser/protocol.ts'
 import type { ColumnMap, Field } from '../electron/parser/columns.ts'
 import type { Supplier } from '../electron/db/repo/suppliers.ts'
 import type { Mapping, MappingLookup, SaveMappingInput } from '../electron/db/repo/mappings.ts'
@@ -15,7 +17,7 @@ import type { WatchState, WatchedFolder } from '../electron/watcher/watcher.ts'
 import type { PendingFile, WatchEvent } from '../electron/watcher/pipeline.ts'
 
 export type {
-  SheetSummary, SheetPreview, CandidateInfo, ColumnMap, Field,
+  SheetSummary, SheetPreview, CandidateInfo, ColumnMap, Field, SheetWindow,
   Supplier, Mapping, MappingLookup, SaveMappingInput, ImportResult,
   SearchQuery, SearchResult, SearchHit, Correction, Source, SourceStatus,
   ProductGroup, GroupedResult, LinkStats, MatchSuggestion,
@@ -72,6 +74,11 @@ export interface Api {
     sheet: string,
     opts?: { headerRow?: number },
   ): Promise<SheetPreview>
+
+  /** Окно строк листа для просмотра прайса. */
+  readRows(
+    path: string, sheet: string, from: number, count: number, headerRow?: number,
+  ): Promise<SheetWindow>
 
   listSuppliers(): Promise<Supplier[]>
   listMappings(): Promise<Mapping[]>

@@ -1,7 +1,7 @@
 import { utilityProcess, type UtilityProcess } from 'electron'
 import path from 'node:path'
 import type {
-  ParseRequest, ParseResponse, SheetSummary, SheetPreview, ExtractPayload,
+  ParseRequest, ParseResponse, SheetSummary, SheetPreview, ExtractPayload, SheetWindow,
 } from './protocol.ts'
 import type { Field } from './columns.ts'
 
@@ -112,6 +112,18 @@ export async function extract(
   )
   if (res.type !== 'extract') throw new Error('Неожиданный ответ процесса разбора')
   return res.result
+}
+
+export async function readRows(
+  file: string,
+  sheet: string,
+  from: number,
+  count: number,
+  headerRow?: number,
+): Promise<SheetWindow> {
+  const res = unwrap(await request({ type: 'rows', path: file, sheet, from, count, headerRow }))
+  if (res.type !== 'rows') throw new Error('Неожиданный ответ процесса разбора')
+  return res.window
 }
 
 export function stopParser(): void {

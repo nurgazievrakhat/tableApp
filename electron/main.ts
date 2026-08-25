@@ -18,7 +18,7 @@ function createWindow(): void {
     minWidth: 900,
     minHeight: 600,
     title: 'TableEasy',
-    backgroundColor: '#12141a',
+    backgroundColor: '#eef0f4',
     webPreferences: {
       preload: path.join(DIST_ELECTRON, 'preload.js'),
       contextIsolation: true,

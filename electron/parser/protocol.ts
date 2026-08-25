@@ -36,6 +36,17 @@ export interface ExtractPayload {
   priceDateSource: 'cell' | 'filename' | 'mtime' | 'none'
 }
 
+export interface SheetWindow {
+  sheet: string
+  /** Индекс первой отданной строки, 0-based. */
+  from: number
+  rows: string[][]
+  /** Всего строк на листе — нужно для полосы прокрутки. */
+  total: number
+  cols: number
+  headerRow: number | null
+}
+
 export type ParseRequest =
   | { id: number; type: 'listSheets'; path: string }
   | {
@@ -45,6 +56,15 @@ export type ParseRequest =
       sheet: string
       sampleRows?: number
       /** Строка заголовков вручную; без неё работает автоопределение. */
+      headerRow?: number
+    }
+  | {
+      id: number
+      type: 'rows'
+      path: string
+      sheet: string
+      from: number
+      count: number
       headerRow?: number
     }
   | {
@@ -62,4 +82,5 @@ export type ParseResponse =
   | { id: number; ok: true; type: 'listSheets'; sheets: SheetSummary[]; file: string }
   | { id: number; ok: true; type: 'readSheet'; preview: SheetPreview }
   | { id: number; ok: true; type: 'extract'; result: ExtractPayload }
+  | { id: number; ok: true; type: 'rows'; window: SheetWindow }
   | { id: number; ok: false; error: string }

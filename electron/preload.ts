@@ -7,6 +7,8 @@ const api: Api = {
   pickPriceFile: () => ipcRenderer.invoke('parser:pick'),
   openPriceFile: (path) => ipcRenderer.invoke('parser:open', path),
   readSheet: (path, sheet, opts) => ipcRenderer.invoke('parser:sheet', path, sheet, opts),
+  readRows: (path, sheet, from, count, headerRow) =>
+    ipcRenderer.invoke('parser:rows', path, sheet, from, count, headerRow),
   listSuppliers: () => ipcRenderer.invoke('suppliers:list'),
   listMappings: () => ipcRenderer.invoke('mapping:list'),
   findMapping: (signature, filename) => ipcRenderer.invoke('mapping:find', signature, filename),
