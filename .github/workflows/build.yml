@@ -43,7 +43,7 @@ jobs:
         run: npm run dist:win
 
       - name: Артефакт
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: TableEasy-setup
           path: release/*.exe
