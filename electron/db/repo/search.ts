@@ -3,6 +3,9 @@ import { normalizeName, normalizeArticle } from '../../parser/normalize.ts'
 import { effectivePrice } from '../../parser/promo.ts'
 import { correctToken, tokenExists } from './spelling.ts'
 
+/** Потолок выдачи: столько строк уже не читают, а IPC и отрисовка не бесплатны. */
+const MAX_LIMIT = 1000
+
 export interface SearchQuery {
   text: string
   supplierIds?: number[]
@@ -95,11 +98,6 @@ function expression(tokens: string[], text: string): string {
   // Ветка лишняя, только если запрос и так одно слово, равное склейке.
   if (tokens.length === 1 && tokens[0] === article) return base
   return `(${base}) OR "${article.replace(/"/g, '""')}"*`
-}
-
-export function buildFtsQuery(text: string): string | null {
-  const tokens = queryTokens(text)
-  return tokens.length === 0 ? null : expression(tokens, text)
 }
 
 /**
@@ -247,7 +245,7 @@ export function search(q: SearchQuery): SearchResult {
     .all({
       ...params,
       exactArticle: normalizeArticle(q.text) || ' ',
-      limit: q.limit ?? 200,
+      limit: Math.min(q.limit ?? 200, MAX_LIMIT),
       offset: q.offset ?? 0,
     }) as Row[]
 
@@ -302,7 +300,7 @@ export function searchGrouped(
   const started = Date.now()
   const db = getDatabase()
 
-  const flat = search({ ...q, limit: Math.max(q.limit ?? 200, 400) })
+  const flat = search({ ...q, limit: Math.min(Math.max(q.limit ?? 200, 400), MAX_LIMIT) })
   if (flat.hits.length === 0) {
     return {
       groups: [], total: 0, elapsedMs: Date.now() - started,
@@ -384,7 +382,7 @@ export function searchGrouped(
     })
   }
 
-  const limit = q.limit ?? 200
+  const limit = Math.min(q.limit ?? 200, MAX_LIMIT)
   return {
     groups: groups.slice(0, limit),
     total: groups.length,

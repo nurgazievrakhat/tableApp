@@ -75,10 +75,18 @@ async function drain(): Promise<void> {
       const file = queue.shift()!
       if (!fs.existsSync(file)) continue
 
-      const { event, pending: p } = await processFile(file)
-      record(event)
-      if (p) pending.set(file, p)
-      else pending.delete(file)
+      try {
+        const { event, pending: p } = await processFile(file)
+        record(event)
+        if (p) pending.set(file, p)
+        else pending.delete(file)
+      } catch (err) {
+        // Один битый файл не должен останавливать разбор остальных.
+        record({
+          type: 'error', path: file, fileName: path.basename(file),
+          at: Math.floor(Date.now() / 1000), error: (err as Error).message,
+        })
+      }
       push()
     }
   } finally {

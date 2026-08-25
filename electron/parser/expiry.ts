@@ -29,6 +29,3 @@ export function parseExpiry(raw: unknown): number | null {
 
   return null
 }
-
-export const formatExpiry = (ts: number | null): string =>
-  ts === null ? '' : new Date(ts * 1000).toISOString().slice(0, 10)

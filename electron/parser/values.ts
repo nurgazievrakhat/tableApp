@@ -49,11 +49,3 @@ export function parseNumber(v: unknown): number | null {
   const n = Number(s)
   return Number.isFinite(n) ? n : null
 }
-
-/** Доля непустых ячеек в строке — признак того, что строка вообще содержательна. */
-export function filledRatio(row: unknown[]): number {
-  if (row.length === 0) return 0
-  let filled = 0
-  for (const cell of row) if (!isBlank(cell)) filled++
-  return filled / row.length
-}

@@ -20,6 +20,13 @@ const DEFAULT_SAMPLE_ROWS = 40
 type ExtractColumns = Extract<ParseRequest, { type: 'extract' }>['columns']
 
 /**
+ * Потолок на одно окно строк. Само по себе значение ограничено размером листа,
+ * но ошибка в интерфейсе не должна уметь вытянуть весь прайс одним вызовом:
+ * 5930 строк едут по IPC треть секунды.
+ */
+const MAX_WINDOW_ROWS = 1000
+
+/**
  * Кэш на одну книгу: UI почти всегда сначала просит список листов, а потом
  * превью — без кэша один и тот же файл читался бы дважды.
  */
@@ -114,7 +121,7 @@ function buildWindow(
 ): SheetWindow {
   const sheet = readSheet(load(file), sheetName, headerRow)
   const start = Math.max(0, Math.min(from, Math.max(0, sheet.rows - 1)))
-  const end = Math.min(sheet.grid.length, start + Math.max(1, count))
+  const end = Math.min(sheet.grid.length, start + Math.min(Math.max(1, count), MAX_WINDOW_ROWS))
 
   const rows: string[][] = []
   for (let r = start; r < end; r++) {

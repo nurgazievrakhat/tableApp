@@ -217,7 +217,7 @@ export function priceChanges(q: ChangesQuery = {}): ChangesReport {
   filtered.sort((a, b) => Math.abs(b.pct) - Math.abs(a.pct))
 
   return {
-    rows: filtered.slice(0, q.limit ?? 200),
+    rows: filtered.slice(0, Math.min(q.limit ?? 200, 1000)),
     total: filtered.length,
     up,
     down,
