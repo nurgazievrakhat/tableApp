@@ -2,27 +2,13 @@ import { useCallback, useEffect, useState } from 'react'
 import type {
   ColumnCheck, Field, ImportOutcome, Mapping, OpenedFile, SheetPreview, Supplier,
 } from '@shared/types'
-import { FIELD_LABEL, FIELD_ORDER, REQUIRED_FIELDS } from '../fields.ts'
+import { FIELD_LABEL, REQUIRED_FIELDS } from '../fields.ts'
 import SheetViewer from './SheetViewer.tsx'
+import MappingGrid from './MappingGrid.tsx'
+import ResultPreview from './ResultPreview.tsx'
 import { useModal } from '../useModal.ts'
 
 type Columns = Partial<Record<Field, number>>
-
-/**
- * Представительная строка товара для колонки «Пример значения».
- *
- * Первая непустая не годится: сразу под шапкой часто идёт категория, у которой
- * заполнена одна ячейка. Берём первую строку минимум с тремя значениями.
- */
-function exampleRow(preview: SheetPreview): string[] | null {
-  const header = preview.headerRow ?? -1
-  for (let i = 0; i < preview.sample.length; i++) {
-    if (preview.sampleFrom + i <= header) continue
-    const row = preview.sample[i]
-    if (row.filter((v) => v && v.trim() !== '').length >= 3) return row
-  }
-  return null
-}
 
 export default function ImportDialog({
   initialPath, onClose, onDone,
@@ -46,6 +32,7 @@ export default function ImportDialog({
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [viewing, setViewing] = useState(false)
+  const [showAll, setShowAll] = useState(false)
 
   const loadSheet = useCallback(
     async (f: OpenedFile, sheetName: string, headerRow?: number) => {
@@ -102,7 +89,7 @@ export default function ImportDialog({
 
   useModal(onClose, !viewing)
 
-  /** Поле закреплено ровно за одной колонкой: назначая, снимаем со старой. */
+  /** Роль закреплена ровно за одной колонкой: назначая, снимаем со старой. */
   function assign(col: number, field: Field | '') {
     setColumns((prev) => {
       const next: Columns = {}
@@ -114,10 +101,6 @@ export default function ImportDialog({
     })
   }
 
-  /**
-   * Одно действие вместо двух: профиль сохраняется и тут же применяется.
-   * Разделять их незачем — размечают колонки ровно затем, чтобы загрузить файл.
-   */
   async function saveAndImport() {
     if (!file || !preview || !sheet) return
     setSaving(true)
@@ -142,18 +125,24 @@ export default function ImportDialog({
     }
   }
 
-  // Замечания показываем только для колонок, которые пользователь не трогал:
-  // проверка сделана по автоматической разметке, а он мог уже всё поправить.
+  // Замечания показываем только там, где разметка осталась автоматической:
+  // проверка сделана по ней, а пользователь мог уже всё поправить.
   const problems = new Map<number, ColumnCheck>()
   for (const c of preview?.checks ?? []) {
     if (!c.ok && columns[c.field] === c.col) problems.set(c.col, c)
   }
 
+  /** Роли двух колонок перепутаны местами — предлагаем поменять одним нажатием. */
+  const swap = findSwap(problems, columns)
+
+  function applySwap() {
+    if (!swap) return
+    setColumns((prev) => ({ ...prev, [swap.a.field]: swap.b.col, [swap.b.field]: swap.a.col }))
+  }
+
   const missing = REQUIRED_FIELDS.filter((f) => columns[f] === undefined)
+  const items = preview?.candidates[0]?.dataRows ?? 0
   const ready = file && preview && supplierName.trim() !== '' && missing.length === 0
-  const example = preview ? exampleRow(preview) : null
-  const roleOf = new Map<number, Field>()
-  for (const [f, c] of Object.entries(columns)) roleOf.set(c as number, f as Field)
 
   return (
     <>
@@ -172,24 +161,8 @@ export default function ImportDialog({
             {error && <pre>{error}</pre>}
             {busy && !preview && <div className="muted">Читаю файл…</div>}
 
-            {problems.size > 0 && (
-              <p className="hint warn">
-                Заголовок колонки расходится с тем, что под ней лежит. Так бывает,
-                когда подписи в прайсе перепутаны местами — проверьте отмеченные
-                строки и поправьте роль вручную.
-              </p>
-            )}
-
-            {ambiguous.length > 0 && (
-              <p className="hint warn">
-                Отпечаток заголовков совпал с несколькими профилями
-                ({ambiguous.map((m) => m.supplierName).join(', ')}), а имя файла их не
-                разводит. Выберите поставщика вручную — выбор запомнится.
-              </p>
-            )}
-
             {file && file.sheets.length > 1 && (
-              <div className="toolbar" style={{ marginBottom: 'var(--s4)' }}>
+              <div className="toolbar sheets">
                 <span className="muted">Лист:</span>
                 {file.sheets.map((s) => (
                   <button
@@ -206,97 +179,113 @@ export default function ImportDialog({
 
             {preview && (
               <>
-                <div className="form">
-                  <label className="field">
-                    <span>Поставщик</span>
-                    <input
-                      list="suppliers"
-                      value={supplierName}
-                      placeholder="например, Неман-Фарм"
-                      onChange={(e) => setSupplierName(e.target.value)}
-                      style={{ width: 240 }}
-                    />
-                    <datalist id="suppliers">
-                      {suppliers.map((s) => <option key={s.id} value={s.name} />)}
-                    </datalist>
-                  </label>
+                <section className="step">
+                  <h3><span className="num">1</span> Чей это прайс</h3>
+                  <input
+                    list="suppliers"
+                    value={supplierName}
+                    placeholder="Название поставщика"
+                    onChange={(e) => setSupplierName(e.target.value)}
+                    style={{ width: 280 }}
+                  />
+                  <datalist id="suppliers">
+                    {suppliers.map((s) => <option key={s.id} value={s.name} />)}
+                  </datalist>
+                  {ambiguous.length > 0 && (
+                    <p className="hint warn">
+                      Такая же шапка есть у {ambiguous.map((m) => m.supplierName).join(' и ')} —
+                      выберите, чей это прайс. Выбор запомнится.
+                    </p>
+                  )}
+                </section>
 
-                  <label className="field">
-                    <span>Строка заголовков</span>
-                    <input
-                      type="number"
-                      min={1}
-                      max={preview.rows}
-                      value={(preview.headerRow ?? 0) + 1}
-                      disabled={busy}
-                      onChange={(e) => {
-                        const n = Number(e.target.value)
-                        if (file && n >= 1 && n <= preview.rows) {
-                          void loadSheet(file, preview.sheet, n - 1)
-                        }
-                      }}
-                    />
-                  </label>
+                <section className="step">
+                  <h3><span className="num">2</span> Что в колонках</h3>
+                  <p className="hint">
+                    Приложение разметило само. Проверьте по значениям под заголовками
+                    и поправьте, если что-то не так.
+                  </p>
 
-                  <label className="field">
-                    <span>Найдено товаров</span>
-                    <span className="mono big">
-                      {preview.candidates[0]?.dataRows.toLocaleString('ru-RU') ?? 0}
+                  {problems.size > 0 && (
+                    <div className="alert">
+                      <div className="grow">
+                        <b>Подписи расходятся с тем, что в колонках.</b>
+                        <ul>
+                          {[...problems.values()].map((c) => (
+                            <li key={c.col}>
+                              Колонка {colLetter(c.col)} отмечена как «{FIELD_LABEL[c.field]}»,
+                              но {c.message}
+                              {c.betterCol !== undefined &&
+                                ` — похоже, они в колонке ${colLetter(c.betterCol)}`}.
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      {swap && (
+                        <button className="primary small" onClick={applySwap}>
+                          Поменять «{FIELD_LABEL[swap.a.field]}» и «{FIELD_LABEL[swap.b.field]}»
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  <MappingGrid
+                    preview={preview}
+                    columns={columns}
+                    problems={problems}
+                    showAll={showAll}
+                    onAssign={assign}
+                    onPickHeader={(row) => {
+                      if (file && row !== preview.headerRow) void loadSheet(file, preview.sheet, row)
+                    }}
+                  />
+
+                  <div className="toolbar grid-foot">
+                    <span className="muted">
+                      Заголовки — строка <b>{(preview.headerRow ?? 0) + 1}</b>.
+                      Не та? Нажмите на номер нужной строки слева.
                     </span>
-                  </label>
-                </div>
+                    <span className="sep" />
+                    <button className="small" onClick={() => setShowAll((v) => !v)}>
+                      {showAll ? 'Скрыть пустые колонки' : 'Показать все колонки'}
+                    </button>
+                    <button className="small" onClick={() => setViewing(true)}>
+                      Открыть весь прайс
+                    </button>
+                  </div>
 
-                <table className="mapping">
-                  <thead>
-                    <tr>
-                      <th className="num">Кол.</th>
-                      <th>Заголовок в файле</th>
-                      <th>Что это</th>
-                      <th>Пример значения</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {preview.headers.map((header, col) => (
-                      <tr key={col} className={roleOf.has(col) ? 'assigned' : undefined}>
-                        <td className="num mono muted">{col + 1}</td>
-                        <td>{header || <span className="muted">пусто</span>}</td>
-                        <td>
-                          <select
-                            value={roleOf.get(col) ?? ''}
-                            onChange={(e) => assign(col, e.target.value as Field | '')}
-                          >
-                            <option value="">— не использовать —</option>
-                            {FIELD_ORDER.map((f) => (
-                              <option key={f} value={f}>{FIELD_LABEL[f]}</option>
-                            ))}
-                          </select>
-                        </td>
-                        <td className="muted ellipsis">{example?.[col] ?? ''}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                  {missing.length > 0 && (
+                    <p className="hint warn">
+                      Без этого загрузить нельзя: {missing.map((f) => FIELD_LABEL[f]).join(', ')}.
+                      Отметьте нужную колонку в списке над ней.
+                    </p>
+                  )}
+                </section>
+
+                <section className="step">
+                  <h3><span className="num">3</span> Что попадёт в базу</h3>
+                  <ResultPreview preview={preview} columns={columns} />
+                </section>
               </>
             )}
           </div>
 
           <footer>
-            {preview && (
-              <button onClick={() => setViewing(true)}>Посмотреть лист целиком</button>
-            )}
-            <span className="grow">
-              {missing.length > 0 && (
+            <span className="grow muted">
+              {/* Кнопка заблокирована — человек должен видеть, чего не хватает. */}
+              {preview && supplierName.trim() === '' ? (
+                <span className="warn">Укажите поставщика — шаг 1</span>
+              ) : preview && missing.length > 0 ? (
                 <span className="warn">
-                  Укажите колонки: {missing.map((f) => FIELD_LABEL[f]).join(', ')}
+                  Отметьте колонки: {missing.map((f) => FIELD_LABEL[f]).join(', ')}
                 </span>
-              )}
-              {missing.length === 0 && supplierName.trim() === '' && (
-                <span className="warn">Укажите поставщика</span>
+              ) : (
+                preview && <>Товаров в прайсе: <b>{items.toLocaleString('ru-RU')}</b></>
               )}
             </span>
             <button onClick={onClose}>Отмена</button>
             <button className="primary" disabled={!ready || saving || busy} onClick={saveAndImport}>
-              {saving ? 'Загружаю…' : 'Загрузить в базу'}
+              {saving ? 'Загружаю…' : `Загрузить ${items.toLocaleString('ru-RU')} товаров`}
             </button>
           </footer>
         </div>
@@ -317,4 +306,33 @@ export default function ImportDialog({
       )}
     </>
   )
+}
+
+function colLetter(i: number): string {
+  let s = ''
+  let n = i
+  do { s = String.fromCharCode(65 + (n % 26)) + s; n = Math.floor(n / 26) - 1 } while (n >= 0)
+  return s
+}
+
+/**
+ * Две роли, назначенные на колонки друг друга.
+ *
+ * Самый частый случай перепутанных подписей: у «Медлайф» колонка
+ * «ПРОИЗВОДИТЕЛЬ» содержит даты, а «СРОК ГОДНОСТИ» — названия заводов.
+ * Такое чинится одним нажатием, и незачем заставлять человека возиться
+ * с двумя выпадающими списками.
+ */
+function findSwap(
+  problems: Map<number, ColumnCheck>,
+  columns: Partial<Record<Field, number>>,
+): { a: ColumnCheck; b: ColumnCheck } | null {
+  const list = [...problems.values()].filter((c) => c.betterCol !== undefined)
+  for (const a of list) {
+    const b = list.find(
+      (x) => x !== a && x.col === a.betterCol && x.betterCol === a.col,
+    )
+    if (b && columns[a.field] === a.col && columns[b.field] === b.col) return { a, b }
+  }
+  return null
 }

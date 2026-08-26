@@ -6,7 +6,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { readWorkbook, listSheets, readSheet } from './readWorkbook.ts'
-import { cellText } from './values.ts'
+import { cellText, isBlank } from './values.ts'
 import { headerSignature } from './signature.ts'
 import { validateMapping } from './validate.ts'
 import { extractRows } from './rows.ts'
@@ -69,6 +69,8 @@ function buildPreview(
       ? validateMapping(sheet.grid, d.dataStartRow, d.map.fields, sheet.cols)
       : []
 
+  const columnFill = measureFill(sheet.grid, d.dataStartRow ?? 0, sheet.cols)
+
   return {
     sheet: sheetName,
     rows: sheet.rows,
@@ -76,6 +78,7 @@ function buildPreview(
     signature: d.headerRow === null ? null : headerSignature(headerCells),
     headers: Array.from({ length: sheet.cols }, (_, c) => cellText(headerCells[c])),
     checks,
+    columnFill,
     headerRow: d.headerRow,
     dataStartRow: d.dataStartRow,
     map: d.map,
@@ -143,6 +146,18 @@ function buildWindow(
     cols: sheet.cols,
     headerRow: sheet.detection.headerRow,
   }
+}
+
+/** Насколько заполнена каждая колонка — по первым строкам данных. */
+function measureFill(grid: unknown[][], dataStartRow: number, cols: number): number[] {
+  const LOOK = 200
+  const fill = new Array<number>(cols).fill(0)
+  let rows = 0
+  for (let r = dataStartRow; r < grid.length && rows < LOOK; r++, rows++) {
+    const row = grid[r] ?? []
+    for (let c = 0; c < cols; c++) if (!isBlank(row[c])) fill[c]++
+  }
+  return rows === 0 ? fill : fill.map((n) => n / rows)
 }
 
 function handle(req: ParseRequest): ParseResponse {

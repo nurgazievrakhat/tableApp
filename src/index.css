@@ -546,3 +546,68 @@ table.results tbody tr.clickable:hover td { background: var(--accent-soft); }
   font-size: var(--fs-sm); font-weight: 500; white-space: normal;
 }
 table.mapping td.ellipsis { max-width: 320px; }
+
+/* --- окно разметки: шаги и разметка прямо на таблице --- */
+
+.step { margin-bottom: var(--s5); }
+.step:last-child { margin-bottom: 0; }
+.step > h3 {
+  display: flex; align-items: center; gap: var(--s2);
+  font-size: var(--fs-md); margin: 0 0 var(--s3);
+  padding-bottom: var(--s2); border-bottom: 1px solid var(--border-soft);
+}
+.step .num {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--accent); color: #fff;
+  font-size: var(--fs-sm); font-weight: 700;
+}
+.toolbar.sheets { margin-bottom: var(--s4); }
+.toolbar.grid-foot { margin-top: var(--s3); }
+
+.alert {
+  display: flex; align-items: center; gap: var(--s3);
+  border: 1px solid #e8cfa0; background: var(--warn-soft);
+  border-radius: var(--radius); padding: var(--s3);
+  margin-bottom: var(--s3); font-size: var(--fs-sm); color: var(--warn);
+}
+.alert .grow { flex: 1; }
+
+.mapgrid-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); }
+table.mapgrid { border-collapse: collapse; font-size: var(--fs-sm); white-space: nowrap; }
+table.mapgrid th, table.mapgrid td {
+  border: 1px solid var(--border-soft); padding: var(--s1) var(--s2);
+  max-width: 220px; overflow: hidden; text-overflow: ellipsis;
+}
+table.mapgrid thead tr.letters th {
+  background: var(--head); color: var(--muted);
+  text-align: center; font-weight: 600; padding: 2px var(--s2);
+  position: static;
+}
+table.mapgrid thead tr.roles th {
+  background: var(--panel-alt); padding: var(--s2);
+  position: static; vertical-align: top;
+}
+table.mapgrid thead tr.roles th.has-problem { background: var(--warn-soft); }
+table.mapgrid select { width: 100%; min-width: 130px; font-size: var(--fs-sm); }
+table.mapgrid select.assigned { border-color: var(--accent); font-weight: 600; color: var(--accent); }
+.col-flag {
+  display: block; margin-top: var(--s1); text-align: center;
+  font-size: var(--fs-sm); font-weight: 600; color: var(--warn);
+}
+table.mapgrid td.rowno {
+  background: var(--head); color: var(--muted); text-align: right;
+  min-width: 48px; cursor: pointer; font-weight: 500;
+}
+table.mapgrid td.rowno:hover { background: var(--accent-soft); color: var(--accent); }
+table.mapgrid tr.headerRow td { background: var(--accent-soft); font-weight: 700; }
+table.mapgrid td.mapped { background: #f4f8fd; }
+
+table.result-preview { width: auto; font-size: var(--fs-base); }
+table.result-preview td { border-bottom: 1px solid var(--border-soft); padding: var(--s2) var(--s3); }
+table.result-preview td.label { color: var(--muted); width: 170px; }
+table.result-preview td.value { font-weight: 600; }
+table.result-preview td.raw { font-size: var(--fs-sm); }
+table.result-preview tr.bad td { background: var(--warn-soft); }
+.alert ul { margin: var(--s1) 0 0; padding-left: var(--s5); }
+.alert li { margin-bottom: 2px; }
