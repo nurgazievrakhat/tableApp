@@ -1,6 +1,7 @@
 import type { Database } from 'better-sqlite3'
 import m001 from './migrations/001_init.sql?raw'
 import m002 from './migrations/002_vocab.sql?raw'
+import m003 from './migrations/003_import_refs.sql?raw'
 
 /**
  * Миграции применяются по порядку, версия хранится в PRAGMA user_version.
@@ -9,6 +10,7 @@ import m002 from './migrations/002_vocab.sql?raw'
 const MIGRATIONS: { version: number; name: string; sql: string }[] = [
   { version: 1, name: '001_init', sql: m001 },
   { version: 2, name: '002_vocab', sql: m002 },
+  { version: 3, name: '003_import_refs', sql: m003 },
 ]
 
 export interface MigrationResult {

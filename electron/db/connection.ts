@@ -22,9 +22,25 @@ export function openDatabase(): Database {
   // WAL — чтобы чтение из UI не блокировалось идущим импортом.
   db.pragma('journal_mode = WAL')
   db.pragma('synchronous = NORMAL')
-  db.pragma('foreign_keys = ON')
 
+  // Миграции идут с выключенными внешними ключами: изменить ограничение в
+  // SQLite можно только пересборкой таблицы, а пересобрать её при включённых
+  // ключах нельзя — на неё ссылаются другие. Переключать этот режим внутри
+  // транзакции бесполезно, поэтому он снимается здесь, до неё.
+  db.pragma('foreign_keys = OFF')
   lastMigration = migrate(db)
+
+  // После пересборки таблиц проверяем, что ссылки никуда не разъехались.
+  // Молча включить ключи поверх испорченных данных было бы хуже, чем упасть.
+  const broken = db.pragma('foreign_key_check') as unknown[]
+  if (broken.length > 0) {
+    throw new Error(
+      `После миграции нарушены связи между таблицами (${broken.length}). ` +
+        'База не изменена — сообщите разработчику.',
+    )
+  }
+
+  db.pragma('foreign_keys = ON')
   return db
 }
 
