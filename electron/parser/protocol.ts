@@ -40,6 +40,8 @@ export interface ExtractPayload {
   items: ParsedItem[]
   skipped: SkippedRow[]
   categories: string[]
+  /** Заголовок колонки со второй ценой — подпись к ней в карточке и поиске. */
+  priceAltLabel: string | null
   collisions: number
   priceDate: number | null
   priceDateSource: 'cell' | 'filename' | 'mtime' | 'none'

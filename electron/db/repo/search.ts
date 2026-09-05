@@ -24,6 +24,9 @@ export interface SearchHit {
   name: string
   article: string | null
   price: number | null
+  /** Вторая цена прайса и её заголовок оттуда же: «Безналичный», «Розница». */
+  priceAlt: number | null
+  priceAltLabel: string | null
   /** Цена с учётом действующей сегодня акции; null — акции нет или истекла. */
   promoPrice: number | null
   promoPct: number | null
@@ -117,7 +120,7 @@ function correctTokens(tokens: string[]): { tokens: string[]; corrections: Corre
 }
 
 const ITEM_FIELDS = `i.id, i.supplier_id, s.name AS supplier_name, i.name, i.article,
-       i.price, i.product_id`
+       i.price, i.price_alt, i.price_alt_label, i.product_id`
 
 const ITEM_EXTRAS = `i.promo_pct, i.promo_from, i.promo_to, i.bulk_pct, i.bulk_min_qty,
        i.unit, i.unit_norm, i.stock, i.manufacturer, i.expiry, i.category,
@@ -134,6 +137,8 @@ interface Row {
   name: string
   article: string | null
   price: number | null
+  price_alt: number | null
+  price_alt_label: string | null
   promo_pct: number | null
   promo_from: number | null
   promo_to: number | null
@@ -160,6 +165,8 @@ function toHit(r: Row, now: number): SearchHit {
     name: r.name,
     article: r.article,
     price: r.price,
+    priceAlt: r.price_alt,
+    priceAltLabel: r.price_alt_label,
     promoPrice: effectivePrice(r.price, { pct: r.promo_pct, from: r.promo_from, to: r.promo_to }, now),
     promoPct: r.promo_pct,
     promoTo: r.promo_to,

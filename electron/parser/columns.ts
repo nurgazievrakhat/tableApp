@@ -1,7 +1,7 @@
 /** Классификация колонок прайса по заголовку. См. ARCHITECTURE.md §5, шаг 2. */
 
 export type Field =
-  | 'rowNum' | 'name' | 'price' | 'article' | 'unit' | 'stock'
+  | 'rowNum' | 'name' | 'price' | 'priceAlt' | 'article' | 'unit' | 'stock'
   | 'manufacturer' | 'expiry' | 'promo' | 'vat' | 'packQty'
 
 export interface ColumnMatch {
@@ -128,10 +128,28 @@ export function classifyHeader(cells: unknown[]): ColumnMap {
   const fields: Partial<Record<Field, number>> = {}
   const taken = new Set<number>()
 
-  for (const m of [...matches].sort((a, b) => b.weight - a.weight)) {
+  const byWeight = [...matches].sort((a, b) => b.weight - a.weight)
+  for (const m of byWeight) {
     if (fields[m.field] !== undefined) continue
     fields[m.field] = m.col
     taken.add(m.col)
+  }
+
+  // Вторая цена. У «Прима Интернэшнл» это «Наличный» и «Безналичный», у
+  // «Медлайф» — три уровня цен: одна колонка проигрывает по весу и без этого
+  // уезжала бы в extra_json, откуда её не сравнить и не отфильтровать.
+  //
+  // Одинаковый заголовок — не вторая цена, а разворот объединённой ячейки:
+  // там продублированы и заголовок, и данные.
+  if (fields.priceAlt === undefined && fields.price !== undefined) {
+    const mainHeader = normHeader(cells[fields.price])
+    const second = byWeight.find(
+      (m) => m.field === 'price' && !taken.has(m.col) && m.header !== mainHeader,
+    )
+    if (second) {
+      fields.priceAlt = second.col
+      taken.add(second.col)
+    }
   }
 
   // Заголовки уже занятых колонок: по ним отсеиваем артефакты объединённых

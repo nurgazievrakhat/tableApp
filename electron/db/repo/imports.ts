@@ -9,6 +9,8 @@ export interface RunImportParams {
   fileHash: string
   mtime: number
   priceDate: number | null
+  /** Заголовок колонки со второй ценой; одинаков для всех строк файла. */
+  priceAltLabel: string | null
   items: ParsedItem[]
   skipped: SkippedRow[]
 }
@@ -59,12 +61,12 @@ export function runImport(p: RunImportParams): ImportResult {
   const insertItem = db.prepare(
     `INSERT INTO items(
        supplier_id, file_id, item_key, name, name_norm, article, article_norm,
-       price, currency, promo_raw, promo_pct, promo_from, promo_to,
+       price, price_alt, price_alt_label, currency, promo_raw, promo_pct, promo_from, promo_to,
        bulk_pct, bulk_min_qty, unit, unit_norm, stock, manufacturer, expiry,
        category, row_no, extra_json, extra_text, last_import_id, is_active)
      VALUES (
        @supplierId, @fileId, @itemKey, @name, @nameNorm, @article, @articleNorm,
-       @price, @currency, @promoRaw, @promoPct, @promoFrom, @promoTo,
+       @price, @priceAlt, @priceAltLabel, @currency, @promoRaw, @promoPct, @promoFrom, @promoTo,
        @bulkPct, @bulkMinQty, @unit, @unitNorm, @stock, @manufacturer, @expiry,
        @category, @rowNo, @extraJson, @extraText, @importId, 1)`,
   )
@@ -73,7 +75,8 @@ export function runImport(p: RunImportParams): ImportResult {
     `UPDATE items SET
        file_id = @fileId, name = @name, name_norm = @nameNorm,
        article = @article, article_norm = @articleNorm,
-       price = @price, currency = @currency, promo_raw = @promoRaw,
+       price = @price, price_alt = @priceAlt, price_alt_label = @priceAltLabel,
+       currency = @currency, promo_raw = @promoRaw,
        promo_pct = @promoPct, promo_from = @promoFrom, promo_to = @promoTo,
        bulk_pct = @bulkPct, bulk_min_qty = @bulkMinQty,
        unit = @unit, unit_norm = @unitNorm, stock = @stock,
@@ -123,7 +126,8 @@ export function runImport(p: RunImportParams): ImportResult {
         supplierId: p.supplierId, fileId, importId,
         itemKey: it.itemKey, name: it.name, nameNorm: it.nameNorm,
         article: it.article, articleNorm: it.articleNorm,
-        price: it.price, currency: 'KGS',
+        price: it.price, priceAlt: it.priceAlt, priceAltLabel: p.priceAltLabel,
+        currency: 'KGS',
         promoRaw: it.promoRaw,
         promoPct: it.promo.pct, promoFrom: it.promo.from, promoTo: it.promo.to,
         bulkPct: it.promo.bulkPct, bulkMinQty: it.promo.bulkMinQty,

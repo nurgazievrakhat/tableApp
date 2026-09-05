@@ -4,6 +4,7 @@ export const FIELD_LABEL: Record<Field, string> = {
   rowNum: '№ п/п',
   name: 'Наименование',
   price: 'Цена',
+  priceAlt: 'Вторая цена',
   article: 'Артикул',
   unit: 'Ед. изм.',
   stock: 'Остаток',
@@ -16,7 +17,7 @@ export const FIELD_LABEL: Record<Field, string> = {
 
 /** Порядок в выпадающем списке: сначала то, что нужно почти всегда. */
 export const FIELD_ORDER: Field[] = [
-  'name', 'price', 'article', 'unit', 'stock',
+  'name', 'price', 'priceAlt', 'article', 'unit', 'stock',
   'manufacturer', 'expiry', 'promo', 'vat', 'packQty', 'rowNum',
 ]
 

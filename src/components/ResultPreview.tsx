@@ -11,7 +11,8 @@ import { FIELD_LABEL } from '../fields.ts'
 
 /** Поля показываем в том порядке, в каком человек читает карточку товара. */
 const ORDER: Field[] = [
-  'name', 'article', 'price', 'unit', 'manufacturer', 'expiry', 'stock', 'promo', 'packQty', 'vat',
+  'name', 'article', 'price', 'priceAlt', 'unit', 'manufacturer',
+  'expiry', 'stock', 'promo', 'packQty', 'vat',
 ]
 
 /** Первая строка, похожая на товар: не категория и не почти пустая. */
@@ -79,7 +80,8 @@ function interpret(field: Field, raw: string): { value: string; bad: boolean } {
   const empty = raw.trim() === ''
 
   switch (field) {
-    case 'price': {
+    case 'price':
+    case 'priceAlt': {
       const n = parseNumber(raw)
       return n === null
         ? { value: empty ? 'пусто' : 'не похоже на цену', bad: true }

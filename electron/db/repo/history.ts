@@ -14,6 +14,9 @@ export interface ItemDetail {
   name: string
   article: string | null
   price: number | null
+  /** Вторая цена прайса и её заголовок оттуда же. */
+  priceAlt: number | null
+  priceAltLabel: string | null
   unit: string | null
   stock: string | null
   manufacturer: string | null
@@ -57,7 +60,8 @@ export function getItemDetail(itemId: number): ItemDetail {
 
   const row = db
     .prepare(
-      `SELECT i.id, s.name AS supplier_name, i.name, i.article, i.price, i.unit_norm, i.unit,
+      `SELECT i.id, s.name AS supplier_name, i.name, i.article, i.price,
+              i.price_alt, i.price_alt_label, i.unit_norm, i.unit,
               i.stock, i.manufacturer, i.expiry, i.category, i.is_active, i.promo_raw,
               i.row_no, i.extra_json, f.path, f.sheet,
               (SELECT imp.price_date FROM imports imp WHERE imp.id = i.last_import_id) AS price_date
@@ -73,6 +77,8 @@ export function getItemDetail(itemId: number): ItemDetail {
         name: string
         article: string | null
         price: number | null
+        price_alt: number | null
+        price_alt_label: string | null
         unit_norm: string | null
         unit: string | null
         stock: string | null
@@ -103,6 +109,8 @@ export function getItemDetail(itemId: number): ItemDetail {
     name: row.name,
     article: row.article,
     price: row.price,
+    priceAlt: row.price_alt,
+    priceAltLabel: row.price_alt_label,
     unit: row.unit_norm ?? row.unit,
     stock: row.stock,
     manufacturer: row.manufacturer,

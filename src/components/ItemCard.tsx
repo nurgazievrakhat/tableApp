@@ -119,6 +119,12 @@ export default function ItemCard({ itemId, onClose }: { itemId: number; onClose:
             <dl className="item-facts">
               <dt>Цена</dt>
               <dd className="mono big">{money(detail.price)} <span className="muted">{detail.unit}</span></dd>
+              {detail.priceAlt !== null && (
+                <>
+                  <dt>{detail.priceAltLabel ?? 'Вторая цена'}</dt>
+                  <dd className="mono">{money(detail.priceAlt)}</dd>
+                </>
+              )}
               <dt>Производитель</dt><dd>{detail.manufacturer ?? '—'}</dd>
               <dt>Годен до</dt><dd className="mono">{date(detail.expiry)}</dd>
               <dt>Остаток</dt><dd>{detail.stock ?? '—'}</dd>

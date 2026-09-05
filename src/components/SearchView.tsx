@@ -223,6 +223,16 @@ export default function SearchView() {
                     </td>
                     <td className="num mono">
                       {money(h.price)} <PriceTrend hit={h} />
+                      {/* Вторая цена подписана словом из самого прайса:
+                          «Безналичный» говорит больше, чем «вторая цена». */}
+                      {h.priceAlt !== null && (
+                        <span
+                          className="alt-price"
+                          title={`${h.priceAltLabel ?? 'вторая цена'} — вторая цена этого прайса`}
+                        >
+                          {h.priceAltLabel ?? 'вторая цена'} {money(h.priceAlt)}
+                        </span>
+                      )}
                     </td>
                     <td className="num mono promo">
                       {h.promoPrice !== null ? (

@@ -6,6 +6,16 @@ const CURRENCY = /[₽$€]|\b(?:руб|р|сом|kgs|usd|eur)\.?\b/gi
 export function cellText(v: unknown): string {
   if (v === null || v === undefined) return ''
   if (v instanceof Date) return v.toISOString().slice(0, 10)
+  // Двоичная дробь показывает себя во всей красе: «Цена с НДС и НСП» у
+  // «Медлайф» хранится как 473.38185999999996, и в карточке позиции это
+  // выглядело именно так. Excel показывает 473,38186 — пятнадцати значащих
+  // цифр хватает, чтобы убрать шум и не тронуть настоящее значение.
+  //
+  // Целых это не касается: у длинного штрихкода те же пятнадцать цифр съели бы
+  // хвост, а шума в целом числе и нет.
+  if (typeof v === 'number' && Number.isFinite(v) && !Number.isInteger(v)) {
+    return String(Number(v.toPrecision(15)))
+  }
   return String(v).trim()
 }
 

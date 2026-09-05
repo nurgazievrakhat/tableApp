@@ -612,6 +612,14 @@ table.result-preview tr.bad td { background: var(--warn-soft); }
 .alert ul { margin: var(--s1) 0 0; padding-left: var(--s5); }
 .alert li { margin-bottom: 2px; }
 
+/* Вторая цена прайса — строкой под основной, чтобы не заводить ещё колонку:
+   у большинства поставщиков цена всё-таки одна. */
+.alt-price {
+  display: block; max-width: 150px; margin-left: auto;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: var(--fs-sm); font-weight: 400; color: var(--muted);
+}
+
 /* --- резервные копии --- */
 
 table.backups { width: 100%; }

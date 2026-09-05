@@ -51,6 +51,7 @@ const isText: Predicate = (v) => {
 /** Проверяем только те роли, у которых есть внятный признак. */
 const EXPECTED: Partial<Record<Field, { test: Predicate; what: string }>> = {
   price: { test: isNumber, what: 'числа' },
+  priceAlt: { test: isNumber, what: 'числа' },
   expiry: { test: isDate, what: 'даты' },
   manufacturer: { test: isText, what: 'текст' },
   name: { test: isText, what: 'текст' },

@@ -14,6 +14,7 @@ export interface ParsedItem {
   article: string | null
   articleNorm: string | null
   price: number | null
+  priceAlt: number | null
   promoRaw: string | null
   promo: Promo
   unit: string | null
@@ -38,6 +39,8 @@ export interface ExtractResult {
   items: ParsedItem[]
   skipped: SkippedRow[]
   categories: string[]
+  /** Заголовок колонки со второй ценой — подпись к ней в карточке и поиске. */
+  priceAltLabel: string | null
   /** Позиции, у которых название совпало и ключ пришлось развести. */
   collisions: number
 }
@@ -126,6 +129,7 @@ export function extractRows(opts: ExtractOptions): ExtractResult {
     }
 
     const rawPrice = parseNumber(at(row, 'price'))
+    const rawPriceAlt = parseNumber(at(row, 'priceAlt'))
     const article = cellText(at(row, 'article')) || null
     const unit = cellText(at(row, 'unit')) || null
     const promoRaw = cellText(at(row, 'promo')) || null
@@ -145,6 +149,9 @@ export function extractRows(opts: ExtractOptions): ExtractResult {
       article,
       articleNorm: article ? normalizeArticle(article) : null,
       price: rawPrice === null ? null : Math.round(rawPrice * multiplier * 100) / 100,
+      // Множитель для обеих цен один: он приводит единицы прайса к штукам, а
+      // это свойство строки, а не колонки.
+      priceAlt: rawPriceAlt === null ? null : Math.round(rawPriceAlt * multiplier * 100) / 100,
       promoRaw,
       promo: parsePromo(promoRaw),
       unit,
@@ -159,7 +166,9 @@ export function extractRows(opts: ExtractOptions): ExtractResult {
   }
 
   const collisions = assignKeys(items)
-  return { items, skipped, categories, collisions }
+  const altCol = columns.priceAlt
+  const priceAltLabel = altCol === undefined ? null : (headers[altCol]?.trim() || null)
+  return { items, skipped, categories, priceAltLabel, collisions }
 }
 
 /**

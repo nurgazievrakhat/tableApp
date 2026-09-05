@@ -63,6 +63,7 @@ async function runOne(
     filePath, sheet, fileHash: hash,
     mtime: Math.floor(st.mtimeMs / 1000),
     priceDate: payload.priceDate,
+    priceAltLabel: payload.priceAltLabel,
     items: payload.items,
     skipped: payload.skipped,
   })
