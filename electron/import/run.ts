@@ -7,11 +7,35 @@ import { invalidateVocabulary } from '../db/repo/spelling.ts'
 import { linkProducts } from '../db/repo/products.ts'
 import type { ImportOutcome } from '@shared/types'
 
+let inFlight = 0
+
+/**
+ * Идёт ли сейчас загрузка. Разбор файла ждёт воркер, и в это время главный
+ * процесс свободен и отвечает на другие запросы — а подменять базу под идущим
+ * импортом нельзя.
+ */
+export function importInProgress(): boolean {
+  return inFlight > 0
+}
+
 /**
  * Разбор по профилю и запись. Единый путь для всех трёх сценариев:
  * ручного импорта, переимпорта источника и автоподхвата из папки.
  */
 export async function performImport(
+  filePath: string,
+  sheet: string,
+  mappingId: number,
+): Promise<ImportOutcome> {
+  inFlight++
+  try {
+    return await runOne(filePath, sheet, mappingId)
+  } finally {
+    inFlight--
+  }
+}
+
+async function runOne(
   filePath: string,
   sheet: string,
   mappingId: number,

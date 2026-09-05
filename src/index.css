@@ -612,6 +612,17 @@ table.result-preview tr.bad td { background: var(--warn-soft); }
 .alert ul { margin: var(--s1) 0 0; padding-left: var(--s5); }
 .alert li { margin-bottom: 2px; }
 
+/* --- резервные копии --- */
+
+table.backups { width: 100%; }
+table.backups td { white-space: nowrap; }
+table.backups td.actions { text-align: right; }
+table.backups tr.confirm-row td { background: var(--warn-soft); color: var(--warn); }
+table.backups tr.confirm-row .row {
+  display: flex; align-items: center; gap: var(--s2); white-space: normal;
+}
+table.backups tr.confirm-row .row .grow { flex: 1; }
+
 /* --- управление поставщиками --- */
 
 table.suppliers tbody td { vertical-align: middle; }

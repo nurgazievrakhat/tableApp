@@ -1,15 +1,14 @@
 import BetterSqlite3, { type Database } from 'better-sqlite3'
-import { app } from 'electron'
 import path from 'node:path'
 import fs from 'node:fs'
 import { migrate, SCHEMA_VERSION, type MigrationResult } from './migrations.ts'
+import { backupOnStartup } from './backup.ts'
+import { getDbPath } from './paths.ts'
+
+export { getDbPath }
 
 let db: Database | null = null
 let lastMigration: MigrationResult | null = null
-
-export function getDbPath(): string {
-  return path.join(app.getPath('userData'), 'data.db')
-}
 
 export function openDatabase(): Database {
   if (db) return db
@@ -22,6 +21,10 @@ export function openDatabase(): Database {
   // WAL — чтобы чтение из UI не блокировалось идущим импортом.
   db.pragma('journal_mode = WAL')
   db.pragma('synchronous = NORMAL')
+
+  // Копия снимается до миграции: миграция пересобирает таблицы целиком, и если
+  // она не сойдётся на чьих-то данных, откатываться будет некуда.
+  backupOnStartup(db, (db.pragma('user_version', { simple: true }) as number) < SCHEMA_VERSION)
 
   // Миграции идут с выключенными внешними ключами: изменить ограничение в
   // SQLite можно только пересборкой таблицы, а пересобрать её при включённых

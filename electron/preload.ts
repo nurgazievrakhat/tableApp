@@ -3,6 +3,10 @@ import type { Api, WatchState } from '@shared/types'
 
 const api: Api = {
   getDbStatus: () => ipcRenderer.invoke('db:status'),
+  listBackups: () => ipcRenderer.invoke('db:backups'),
+  backupNow: () => ipcRenderer.invoke('db:backupNow'),
+  restoreBackup: (name) => ipcRenderer.invoke('db:restore', name),
+  openBackupsFolder: () => ipcRenderer.invoke('db:openBackups'),
   getAppInfo: () => ipcRenderer.invoke('app:info'),
   pickPriceFile: () => ipcRenderer.invoke('parser:pick'),
   openPriceFile: (path) => ipcRenderer.invoke('parser:open', path),

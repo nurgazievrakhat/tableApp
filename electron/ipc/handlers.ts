@@ -1,6 +1,8 @@
-import { ipcMain, app, dialog, BrowserWindow } from 'electron'
+import { ipcMain, app, dialog, shell, BrowserWindow } from 'electron'
 import path from 'node:path'
-import { getStatus } from '../db/connection.ts'
+import fs from 'node:fs'
+import { getStatus, openDatabase, closeDatabase, getDatabase } from '../db/connection.ts'
+import { getBackupState, backupNow, checkBackup, applyBackup } from '../db/backup.ts'
 import { listSheets, readSheet, readRows } from '../parser/service.ts'
 import {
   listSuppliers, findOrCreateSupplier, listSupplierDetails, renameSupplier, removeSupplier,
@@ -8,13 +10,13 @@ import {
 import { listMappings, findMapping, saveMapping, removeMapping } from '../db/repo/mappings.ts'
 import { search, searchGrouped } from '../db/repo/search.ts'
 import { getItemDetail, priceChanges } from '../db/repo/history.ts'
-import { performImport } from '../import/run.ts'
+import { performImport, importInProgress } from '../import/run.ts'
 import {
   pruneProducts, mergeProducts, unmergeProduct, linkProducts, suggestMatches,
 } from '../db/repo/products.ts'
 import {
   addFolder, removeFolder, setFolderEnabled,
-  getState, scanAll, restartWatcher, clearPending, type WatchState,
+  getState, scanAll, restartWatcher, stopWatcher, clearPending, type WatchState,
 } from '../watcher/watcher.ts'
 import { listSources, getSource, removeSource, type Source } from '../db/repo/sources.ts'
 import { invalidateVocabulary } from '../db/repo/spelling.ts'
@@ -22,7 +24,7 @@ import type {
   AppInfo, DbStatus, OpenedFile, SheetPreview,
   Supplier, Mapping, MappingLookup, SaveMappingInput, ImportOutcome,
   SearchQuery, SearchResult, GroupedResult, LinkStats, MatchSuggestion,
-  ItemDetail, ChangesQuery, ChangesReport, SheetWindow, SupplierDetails,
+  ItemDetail, ChangesQuery, ChangesReport, SheetWindow, SupplierDetails, BackupState,
 } from '@shared/types'
 
 async function describe(file: string): Promise<OpenedFile> {
@@ -34,6 +36,56 @@ async function describe(file: string): Promise<OpenedFile> {
 /** Единая точка регистрации IPC. Renderer к базе напрямую не ходит (§3). */
 export function registerIpcHandlers(): void {
   ipcMain.handle('db:status', (): DbStatus => getStatus())
+
+  ipcMain.handle('db:backups', (): BackupState => getBackupState())
+
+  ipcMain.handle('db:backupNow', (): BackupState => {
+    if (importInProgress()) throw new Error('Идёт загрузка прайса — дождитесь её окончания')
+    backupNow(getDatabase())
+    return getBackupState()
+  })
+
+  ipcMain.handle('db:openBackups', async (): Promise<void> => {
+    const { dir } = getBackupState()
+    fs.mkdirSync(dir, { recursive: true })
+    const err = await shell.openPath(dir)
+    if (err !== '') throw new Error(err)
+  })
+
+  /**
+   * Возврат к копии. Файл базы подменяется целиком, поэтому все, кто мог бы
+   * в неё писать, останавливаются заранее, а приложение перезапускается: часть
+   * данных уже прочитана в память окна и после подмены была бы неправдой.
+   */
+  ipcMain.handle('db:restore', (_e, name: string): void => {
+    if (importInProgress()) {
+      throw new Error('Идёт загрузка прайса — дождитесь её окончания и повторите')
+    }
+
+    // Пригодность копии проверяем до того, как трогаем рабочую базу: отказ на
+    // повреждённом файле не должен оставить приложение вообще без базы.
+    checkBackup(name)
+
+    // Нынешнее состояние тоже сохраняем: возврат к копии — не менее опасное
+    // действие, чем то, из-за которого он понадобился.
+    backupNow(getDatabase())
+
+    stopWatcher()
+    closeDatabase()
+
+    try {
+      applyBackup(name)
+    } catch (err) {
+      // Подмена делается переименованием, поэтому рабочий файл цел — возвращаем
+      // приложение в рабочее состояние и показываем причину.
+      openDatabase()
+      restartWatcher()
+      throw err
+    }
+
+    app.relaunch()
+    app.quit()
+  })
 
   ipcMain.handle('app:info', (): AppInfo => ({
     version: app.getVersion(),

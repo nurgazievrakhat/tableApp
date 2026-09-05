@@ -6,6 +6,7 @@ import type { ColumnCheck } from '../electron/parser/validate.ts'
 import type {
   Supplier, SupplierDetails, SupplierProfile,
 } from '../electron/db/repo/suppliers.ts'
+import type { BackupInfo, BackupState } from '../electron/db/backup.ts'
 import type { Mapping, MappingLookup, SaveMappingInput } from '../electron/db/repo/mappings.ts'
 import type { ImportResult } from '../electron/db/repo/imports.ts'
 import type {
@@ -21,7 +22,7 @@ import type { PendingFile, WatchEvent } from '../electron/watcher/pipeline.ts'
 
 export type {
   SheetSummary, SheetPreview, CandidateInfo, ColumnMap, Field, SheetWindow, ColumnCheck,
-  Supplier, SupplierDetails, SupplierProfile,
+  Supplier, SupplierDetails, SupplierProfile, BackupInfo, BackupState,
   Mapping, MappingLookup, SaveMappingInput, ImportResult,
   SearchQuery, SearchResult, SearchHit, Correction, Source, SourceStatus,
   ProductGroup, GroupedResult, LinkStats, MatchSuggestion,
@@ -83,6 +84,14 @@ export interface Api {
   readRows(
     path: string, sheet: string, from: number, count: number, headerRow?: number,
   ): Promise<SheetWindow>
+
+  /** Список резервных копий базы и причина, если копию не удалось снять. */
+  listBackups(): Promise<BackupState>
+  /** Копия прямо сейчас, вне расписания. */
+  backupNow(): Promise<BackupState>
+  /** Заменяет базу копией и перезапускает приложение. */
+  restoreBackup(name: string): Promise<void>
+  openBackupsFolder(): Promise<void>
 
   listSuppliers(): Promise<Supplier[]>
   /** Поставщики с тем, что за ними числится — для управления. */

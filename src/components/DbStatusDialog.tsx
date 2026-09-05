@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { AppInfo, DbStatus } from '@shared/types'
 import { useModal } from '../useModal.ts'
+import BackupsPanel from './BackupsPanel.tsx'
 
 export default function DbStatusDialog({ onClose }: { onClose: () => void }) {
   const [db, setDb] = useState<DbStatus | null>(null)
@@ -50,6 +51,8 @@ export default function DbStatusDialog({ onClose }: { onClose: () => void }) {
                   Electron {info.electron} · Node {info.node} · {info.platform}
                 </dd>
               </dl>
+
+              <BackupsPanel expectedVersion={db.expectedVersion} />
 
               <h3>Таблицы</h3>
               <table>
