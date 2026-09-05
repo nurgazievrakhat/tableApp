@@ -4,6 +4,7 @@ import type {
 } from '@shared/types'
 import ImportDialog from './ImportDialog.tsx'
 import SheetViewer, { type ViewerTarget } from './SheetViewer.tsx'
+import SuppliersPanel from './SuppliersPanel.tsx'
 
 const STATUS: Record<SourceStatus, { label: string; cls: string; hint: string }> = {
   ok: { label: 'актуален', cls: 'ok', hint: 'Файл на диске совпадает с загруженным' },
@@ -262,6 +263,8 @@ export default function PricesView() {
           )}
         </div>
       </section>
+
+      <SuppliersPanel onChanged={() => void reload()} />
 
       <section className="panel-box">
         <header>

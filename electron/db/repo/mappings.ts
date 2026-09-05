@@ -134,3 +134,13 @@ export function get(id: number): Mapping {
   if (!row) throw new Error(`Профиль ${id} не найден`)
   return toMapping(row)
 }
+
+/**
+ * Удаление профиля разметки. Позиции и прайсы остаются: профиль описывает
+ * только то, как читать файл. Пригождается, когда профиль завели по ошибке
+ * или маска имени файла оказалась слишком широкой.
+ */
+export function removeMapping(id: number): void {
+  const info = getDatabase().prepare('DELETE FROM mappings WHERE id = ?').run(id)
+  if (info.changes === 0) throw new Error(`Профиль ${id} не найден`)
+}

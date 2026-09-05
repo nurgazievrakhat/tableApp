@@ -2,8 +2,10 @@ import { ipcMain, app, dialog, BrowserWindow } from 'electron'
 import path from 'node:path'
 import { getStatus } from '../db/connection.ts'
 import { listSheets, readSheet, readRows } from '../parser/service.ts'
-import { listSuppliers, findOrCreateSupplier } from '../db/repo/suppliers.ts'
-import { listMappings, findMapping, saveMapping } from '../db/repo/mappings.ts'
+import {
+  listSuppliers, findOrCreateSupplier, listSupplierDetails, renameSupplier, removeSupplier,
+} from '../db/repo/suppliers.ts'
+import { listMappings, findMapping, saveMapping, removeMapping } from '../db/repo/mappings.ts'
 import { search, searchGrouped } from '../db/repo/search.ts'
 import { getItemDetail, priceChanges } from '../db/repo/history.ts'
 import { performImport } from '../import/run.ts'
@@ -20,7 +22,7 @@ import type {
   AppInfo, DbStatus, OpenedFile, SheetPreview,
   Supplier, Mapping, MappingLookup, SaveMappingInput, ImportOutcome,
   SearchQuery, SearchResult, GroupedResult, LinkStats, MatchSuggestion,
-  ItemDetail, ChangesQuery, ChangesReport, SheetWindow,
+  ItemDetail, ChangesQuery, ChangesReport, SheetWindow, SupplierDetails,
 } from '@shared/types'
 
 async function describe(file: string): Promise<OpenedFile> {
@@ -69,6 +71,20 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle('suppliers:list', (): Supplier[] => listSuppliers())
   ipcMain.handle('mapping:list', (): Mapping[] => listMappings())
+
+  ipcMain.handle('suppliers:details', (): SupplierDetails[] => listSupplierDetails())
+
+  ipcMain.handle('suppliers:rename', (_e, id: number, name: string): Supplier =>
+    renameSupplier(id, name))
+
+  ipcMain.handle('suppliers:remove', (_e, id: number): void => {
+    removeSupplier(id)
+    // Позиции ушли — товары без связей и словарь опечаток надо пересобрать.
+    pruneProducts()
+    invalidateVocabulary()
+  })
+
+  ipcMain.handle('mapping:remove', (_e, id: number): void => removeMapping(id))
 
   ipcMain.handle(
     'mapping:find',

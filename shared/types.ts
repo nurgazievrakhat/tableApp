@@ -3,7 +3,9 @@ import type {
 } from '../electron/parser/protocol.ts'
 import type { ColumnMap, Field } from '../electron/parser/columns.ts'
 import type { ColumnCheck } from '../electron/parser/validate.ts'
-import type { Supplier } from '../electron/db/repo/suppliers.ts'
+import type {
+  Supplier, SupplierDetails, SupplierProfile,
+} from '../electron/db/repo/suppliers.ts'
 import type { Mapping, MappingLookup, SaveMappingInput } from '../electron/db/repo/mappings.ts'
 import type { ImportResult } from '../electron/db/repo/imports.ts'
 import type {
@@ -19,7 +21,8 @@ import type { PendingFile, WatchEvent } from '../electron/watcher/pipeline.ts'
 
 export type {
   SheetSummary, SheetPreview, CandidateInfo, ColumnMap, Field, SheetWindow, ColumnCheck,
-  Supplier, Mapping, MappingLookup, SaveMappingInput, ImportResult,
+  Supplier, SupplierDetails, SupplierProfile,
+  Mapping, MappingLookup, SaveMappingInput, ImportResult,
   SearchQuery, SearchResult, SearchHit, Correction, Source, SourceStatus,
   ProductGroup, GroupedResult, LinkStats, MatchSuggestion,
   ItemDetail, PriceChange, ChangesQuery, ChangesReport, ChangeRow,
@@ -82,6 +85,12 @@ export interface Api {
   ): Promise<SheetWindow>
 
   listSuppliers(): Promise<Supplier[]>
+  /** Поставщики с тем, что за ними числится — для управления. */
+  supplierDetails(): Promise<SupplierDetails[]>
+  renameSupplier(id: number, name: string): Promise<Supplier>
+  /** Удаляет поставщика вместе с прайсами, позициями, историей и профилями. */
+  removeSupplier(id: number): Promise<void>
+  removeMapping(id: number): Promise<void>
   listMappings(): Promise<Mapping[]>
   /** Подбор сохранённого профиля по отпечатку заголовков и имени файла. */
   findMapping(signature: string | null, filename: string): Promise<MappingLookup>

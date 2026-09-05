@@ -611,3 +611,24 @@ table.result-preview td.raw { font-size: var(--fs-sm); }
 table.result-preview tr.bad td { background: var(--warn-soft); }
 .alert ul { margin: var(--s1) 0 0; padding-left: var(--s5); }
 .alert li { margin-bottom: 2px; }
+
+/* --- управление поставщиками --- */
+
+table.suppliers tbody td { vertical-align: middle; }
+/* Ширина задана заранее, иначе поле переименования раздвигает колонку и вся
+   таблица дёргается ровно в тот момент, когда человек целится в неё мышью. */
+table.suppliers th:first-child { width: 260px; }
+table.suppliers input.rename { width: 100%; }
+table.suppliers td.num { white-space: nowrap; }
+.profile-chip {
+  display: inline-flex; align-items: center; gap: var(--s1);
+  border: 1px solid var(--border-soft); border-radius: var(--radius);
+  background: var(--panel-alt); padding: 1px var(--s1) 1px var(--s2);
+  margin: 0 var(--s1) var(--s1) 0; font-size: var(--fs-sm);
+}
+button.tiny {
+  padding: 0 var(--s1); font-size: var(--fs-sm); line-height: 1.2;
+  background: none; border: none; color: var(--muted);
+}
+button.tiny:hover:not(:disabled) { color: var(--err); background: var(--err-soft); }
+.confirm-text { margin-right: var(--s2); font-size: var(--fs-sm); }

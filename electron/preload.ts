@@ -10,6 +10,10 @@ const api: Api = {
   readRows: (path, sheet, from, count, headerRow) =>
     ipcRenderer.invoke('parser:rows', path, sheet, from, count, headerRow),
   listSuppliers: () => ipcRenderer.invoke('suppliers:list'),
+  supplierDetails: () => ipcRenderer.invoke('suppliers:details'),
+  renameSupplier: (id, name) => ipcRenderer.invoke('suppliers:rename', id, name),
+  removeSupplier: (id) => ipcRenderer.invoke('suppliers:remove', id),
+  removeMapping: (id) => ipcRenderer.invoke('mapping:remove', id),
   listMappings: () => ipcRenderer.invoke('mapping:list'),
   findMapping: (signature, filename) => ipcRenderer.invoke('mapping:find', signature, filename),
   saveMapping: (input) => ipcRenderer.invoke('mapping:save', input),
