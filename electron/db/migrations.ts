@@ -3,6 +3,7 @@ import m001 from './migrations/001_init.sql?raw'
 import m002 from './migrations/002_vocab.sql?raw'
 import m003 from './migrations/003_import_refs.sql?raw'
 import m004 from './migrations/004_price_alt.sql?raw'
+import m005 from './migrations/005_product_key_not_unique.sql?raw'
 
 /**
  * Миграции применяются по порядку, версия хранится в PRAGMA user_version.
@@ -13,6 +14,7 @@ const MIGRATIONS: { version: number; name: string; sql: string }[] = [
   { version: 2, name: '002_vocab', sql: m002 },
   { version: 3, name: '003_import_refs', sql: m003 },
   { version: 4, name: '004_price_alt', sql: m004 },
+  { version: 5, name: '005_product_key_not_unique', sql: m005 },
 ]
 
 export interface MigrationResult {

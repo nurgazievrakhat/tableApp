@@ -23,6 +23,8 @@ export interface ImportResult {
   updated: number
   priceChanged: number
   deactivated: number
+  /** Снято у прежнего поставщика, когда файл переехал к другому (см. ниже). */
+  handedOver: number
   reactivated: number
   skipped: number
   elapsedMs: number
@@ -97,6 +99,21 @@ export function runImport(p: RunImportParams): ImportResult {
   // файлом, но каталог у поставщика тот же — позиции и ключуются по нему
   // (UNIQUE(supplier_id, item_key)). Область гашения обязана совпадать с ключом,
   // иначе исчезнувшие позиции остаются «активными» навсегда.
+  // Тот же файл, загруженный под другим именем поставщика, переезжает к нему —
+  // а позиции прежнего владельца остаются: они ключуются парой
+  // (supplier_id, item_key), и у нового поставщика заводится свой комплект.
+  // Прежние при этом активны и никогда больше не обновятся: их файла у них уже
+  // нет. В поиске это выглядит как удвоение всего каталога — ровно так «Неман»
+  // и «Неман-Фарм» показывали одну и ту же позицию дважды. Гасим их: прайса,
+  // который бы их подтверждал, у прежнего поставщика больше нет.
+  const previousOwner = db.prepare(
+    'SELECT supplier_id FROM files WHERE path = ? AND sheet = ?',
+  )
+  const handOver = db.prepare(
+    `UPDATE items SET is_active = 0
+     WHERE supplier_id = ? AND file_id = ? AND is_active = 1`,
+  )
+
   const deactivate = db.prepare(
     `UPDATE items SET is_active = 0
      WHERE supplier_id = ? AND is_active = 1
@@ -105,6 +122,8 @@ export function runImport(p: RunImportParams): ImportResult {
 
   const run = db.transaction((): ImportResult => {
     const started = Date.now()
+
+    const before = previousOwner.get(p.filePath, p.sheet) as { supplier_id: number } | undefined
 
     const { id: fileId } = upsertFile.get({
       supplierId: p.supplierId, path: p.filePath, sheet: p.sheet,
@@ -156,10 +175,15 @@ export function runImport(p: RunImportParams): ImportResult {
 
     const deactivated = deactivate.run(p.supplierId, importId).changes
 
+    const handedOver =
+      before && before.supplier_id !== p.supplierId
+        ? handOver.run(before.supplier_id, fileId).changes
+        : 0
+
     return {
       importId, fileId,
       total: p.items.length,
-      inserted, updated, priceChanged, deactivated, reactivated,
+      inserted, updated, priceChanged, deactivated, reactivated, handedOver,
       skipped: p.skipped.length,
       elapsedMs: Date.now() - started,
     }

@@ -35,6 +35,11 @@ export type ImportOutcome =
   | { status: 'duplicate'; duplicateOf: string }
   | {
       status: 'done'
+      /**
+       * Позиции записаны, но пересобрать связи товаров не удалось. Сравнение по
+       * поставщикам осталось прежним, поиск работает.
+       */
+      linkError: string | null
       result: ImportResult
       supplierName: string
       categories: string[]

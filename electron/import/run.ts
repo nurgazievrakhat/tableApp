@@ -70,12 +70,24 @@ async function runOne(
 
   // Словарь исправления опечаток строится из содержимого базы.
   invalidateVocabulary()
+
   // Новые позиции нужно связать с каноническими товарами, иначе они не попадут
-  // в сравнение по поставщикам.
-  linkProducts()
+  // в сравнение по поставщикам. Связывание идёт своей транзакцией, уже после
+  // записи позиций, поэтому его отказ не отменяет импорт — и сообщать о нём как
+  // о провале импорта нельзя: прайс загружен, поиск по нему работает.
+  // Ровно так и случилось на UNIQUE products.match_key: данные записаны,
+  // а человек видел «Error invoking remote method 'import:run'».
+  let linkError: string | null = null
+  try {
+    linkProducts()
+  } catch (err) {
+    linkError = (err as Error).message
+    console.error('Связывание товаров после импорта не удалось:', linkError)
+  }
 
   return {
     status: 'done',
+    linkError,
     result,
     supplierName: mapping.supplierName,
     categories: payload.categories,

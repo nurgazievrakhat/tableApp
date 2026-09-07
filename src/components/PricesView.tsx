@@ -43,7 +43,11 @@ function summary(o: ImportOutcome): string {
   if (r.updated > 0) parts.push(`обновлено ${r.updated}`)
   if (r.priceChanged > 0) parts.push(`цен изменилось ${r.priceChanged}`)
   if (r.deactivated > 0) parts.push(`пропало ${r.deactivated}`)
-  return parts.join(' · ') || 'без изменений'
+  if (r.handedOver > 0) parts.push(`снято у прежнего поставщика ${r.handedOver}`)
+  const done = parts.join(' · ') || 'без изменений'
+  // Позиции записаны, а связи товаров пересобрать не вышло: молчать об этом
+  // нельзя — сравнение по поставщикам осталось от прошлого импорта.
+  return o.linkError ? `${done} · связать товары не удалось: ${o.linkError}` : done
 }
 
 export default function PricesView() {

@@ -37,6 +37,10 @@ export function linkProducts(): LinkStats {
   }
 
   const run = db.transaction((): { byArticle: number; byName: number } => {
+    // Опустевшие товары убираем до перестройки: пустой ручной товар не связан
+    // ни с чем, но перестройке мешает — он и его название остаются в базе.
+    pruneProducts()
+
     // Ручные склейки неприкосновенны — их позиции в перестройке не участвуют.
     const manual = new Set(
       (
@@ -138,13 +142,19 @@ export function linkProducts(): LinkStats {
   return { byArticle, byName, products, multiSupplier, elapsedMs: Date.now() - started }
 }
 
-/** Товары без связей — например, после удаления источника. */
+/**
+ * Товары без связей — например, после удаления поставщика.
+ *
+ * Ручные тоже: товар, склеенный человеком, автоматика больше не трогает, и
+ * пустой он не восстановится сам — связывать нечего. Раньше такие оставались
+ * навсегда и держали за собой match_key; пока ключ был UNIQUE, следующий
+ * импорт позиции с тем же названием падал на нём (см. миграцию 005).
+ */
 export function pruneProducts(): number {
   return getDatabase()
     .prepare(
       `DELETE FROM products
-       WHERE created_by = 'auto'
-         AND NOT EXISTS (SELECT 1 FROM items i WHERE i.product_id = products.id)`,
+       WHERE NOT EXISTS (SELECT 1 FROM items i WHERE i.product_id = products.id)`,
     )
     .run().changes
 }
