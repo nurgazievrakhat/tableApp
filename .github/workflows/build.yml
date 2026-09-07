@@ -36,6 +36,10 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v7
+        with:
+          # Полная история: описание релиза берётся из сообщения тега, а его
+          # объекта при обычном поверхностном клоне на месте нет.
+          fetch-depth: 0
       - uses: actions/setup-node@v7
         with:
           node-version: 22
@@ -61,9 +65,38 @@ jobs:
         if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
         run: npm run dist:win
 
-      # На теге публикуем сами: electron-builder кладёт в релиз не только .exe,
-      # но и latest.yml с blockmap — без них обновлятель новую версию не увидит,
-      # а без blockmap качал бы установщик целиком вместо изменившихся кусков.
+      # Релиз заводим заранее, до electron-builder.
+      #
+      # Он публикует файлы параллельно, и когда релиза ещё нет, каждый
+      # загрузчик создаёт его сам. Оба видят «release doesn't exist», оба
+      # создают — и файлы одного из них пропадают вместе с проигравшим
+      # объектом. Так у первой сборки v0.2.0 и потерялся blockmap: в логе
+      # «uploading blockmap» есть, а в релизе его нет.
+      #
+      # Заодно описание: обновлятель показывает его в окне «Что изменилось»,
+      # и человеку там нужны понятные строки из сообщения тега, а не список
+      # коммитов. Если тег без сообщения — пусть GitHub соберёт сам.
+      - name: Заготовка релиза
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            echo "Релиз $GITHUB_REF_NAME уже есть"
+            exit 0
+          fi
+          notes="$(git tag -l --format='%(contents)' "$GITHUB_REF_NAME")"
+          if [ -n "$notes" ]; then
+            printf '%s' "$notes" |
+              gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file -
+          else
+            gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --generate-notes
+          fi
+
+      # electron-builder кладёт в готовый релиз .exe, latest.yml и blockmap —
+      # без latest.yml обновлятель новую версию не увидит, а без blockmap качал
+      # бы установщик целиком вместо изменившихся кусков.
       - name: Релиз по тегу
         if: startsWith(github.ref, 'refs/tags/v')
         run: npm run release:win
