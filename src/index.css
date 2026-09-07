@@ -412,6 +412,7 @@ td.actions button + button { margin-left: var(--s2); }
   border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);
 }
 .panel.wide { max-width: 1100px; }
+.panel.narrow { max-width: 520px; }
 .panel > header {
   background: var(--head);
   border-bottom: 1px solid var(--border);
@@ -618,6 +619,20 @@ table.result-preview tr.bad td { background: var(--warn-soft); }
   display: block; max-width: 150px; margin-left: auto;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   font-size: var(--fs-sm); font-weight: 400; color: var(--muted);
+}
+
+/* --- обновление приложения --- */
+
+button.link.accent { color: var(--accent); font-weight: 600; }
+.progress {
+  height: 8px; margin: var(--s4) 0 var(--s2);
+  border-radius: var(--radius); overflow: hidden;
+  background: var(--head); border: 1px solid var(--border-soft);
+}
+.progress > div { height: 100%; background: var(--accent); transition: width .2s; }
+pre.notes {
+  white-space: pre-wrap; background: var(--panel-alt); color: var(--text);
+  border: 1px solid var(--border-soft); max-height: 220px; overflow: auto;
 }
 
 /* --- резервные копии --- */

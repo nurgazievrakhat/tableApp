@@ -3,6 +3,7 @@ import SearchView from './components/SearchView.tsx'
 import ChangesView from './components/ChangesView.tsx'
 import PricesView from './components/PricesView.tsx'
 import DbStatusDialog from './components/DbStatusDialog.tsx'
+import UpdateBar from './components/UpdateBar.tsx'
 
 type View = 'search' | 'changes' | 'prices'
 
@@ -48,6 +49,7 @@ export default function App() {
         <button className="link" onClick={() => setShowStatus(true)}>
           Состояние базы
         </button>
+        <UpdateBar />
       </footer>
 
       {showStatus && <DbStatusDialog onClose={() => setShowStatus(false)} />}

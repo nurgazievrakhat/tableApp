@@ -19,8 +19,10 @@ export default defineConfig({
         vite: {
           resolve: { alias },
           build: {
-            // Нативный модуль не бандлим — грузится из node_modules как есть.
-            rolldownOptions: { external: ['better-sqlite3'] },
+            // Не бандлим: better-sqlite3 — нативный модуль, а electron-updater
+            // читает свои файлы из ресурсов приложения и ломается в бандле.
+            // Оба грузятся из node_modules как есть.
+            rolldownOptions: { external: ['better-sqlite3', 'electron-updater'] },
           },
         },
       },

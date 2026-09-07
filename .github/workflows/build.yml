@@ -44,8 +44,31 @@ jobs:
       - name: Установка зависимостей
         run: npm ci
 
+      # Тег обязан совпадать с версией в package.json: иначе релиз выйдет, а
+      # обновление в приложении не предложится — оно сравнивает версии, а не теги.
+      - name: Сверка тега с версией
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          pkg="$(node -p "require('./package.json').version")"
+          if [ "$tag" != "$pkg" ]; then
+            echo "Тег $GITHUB_REF_NAME не совпадает с версией $pkg в package.json" >&2
+            exit 1
+          fi
+
       - name: Сборка установщика
+        if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
         run: npm run dist:win
+
+      # На теге публикуем сами: electron-builder кладёт в релиз не только .exe,
+      # но и latest.yml с blockmap — без них обновлятель новую версию не увидит,
+      # а без blockmap качал бы установщик целиком вместо изменившихся кусков.
+      - name: Релиз по тегу
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: npm run release:win
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Артефакт
         uses: actions/upload-artifact@v6
@@ -54,10 +77,3 @@ jobs:
           path: release/*.exe
           if-no-files-found: error
           retention-days: 30
-
-      - name: Релиз по тегу
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v2
-        with:
-          files: release/*.exe
-          generate_release_notes: true

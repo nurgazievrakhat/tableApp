@@ -3,6 +3,9 @@ import path from 'node:path'
 import fs from 'node:fs'
 import { getStatus, openDatabase, closeDatabase, getDatabase } from '../db/connection.ts'
 import { getBackupState, backupNow, checkBackup, applyBackup } from '../db/backup.ts'
+import {
+  getUpdateState, checkForUpdate, downloadUpdate, installUpdate,
+} from '../update/updater.ts'
 import { listSheets, readSheet, readRows } from '../parser/service.ts'
 import {
   listSuppliers, findOrCreateSupplier, listSupplierDetails, renameSupplier, removeSupplier,
@@ -25,6 +28,7 @@ import type {
   Supplier, Mapping, MappingLookup, SaveMappingInput, ImportOutcome,
   SearchQuery, SearchResult, GroupedResult, LinkStats, MatchSuggestion,
   ItemDetail, ChangesQuery, ChangesReport, SheetWindow, SupplierDetails, BackupState,
+  UpdateState,
 } from '@shared/types'
 
 async function describe(file: string): Promise<OpenedFile> {
@@ -36,6 +40,11 @@ async function describe(file: string): Promise<OpenedFile> {
 /** Единая точка регистрации IPC. Renderer к базе напрямую не ходит (§3). */
 export function registerIpcHandlers(): void {
   ipcMain.handle('db:status', (): DbStatus => getStatus())
+
+  ipcMain.handle('update:state', (): UpdateState => getUpdateState())
+  ipcMain.handle('update:check', (): Promise<UpdateState> => checkForUpdate())
+  ipcMain.handle('update:download', (): Promise<UpdateState> => downloadUpdate())
+  ipcMain.handle('update:install', (): void => installUpdate())
 
   ipcMain.handle('db:backups', (): BackupState => getBackupState())
 

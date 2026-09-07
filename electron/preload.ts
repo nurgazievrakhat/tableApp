@@ -1,8 +1,17 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import type { Api, WatchState } from '@shared/types'
+import type { Api, UpdateState, WatchState } from '@shared/types'
 
 const api: Api = {
   getDbStatus: () => ipcRenderer.invoke('db:status'),
+  updateState: () => ipcRenderer.invoke('update:state'),
+  checkForUpdate: () => ipcRenderer.invoke('update:check'),
+  downloadUpdate: () => ipcRenderer.invoke('update:download'),
+  installUpdate: () => ipcRenderer.invoke('update:install'),
+  onUpdateState: (cb) => {
+    const listener = (_e: unknown, s: UpdateState) => cb(s)
+    ipcRenderer.on('update:state', listener)
+    return () => ipcRenderer.off('update:state', listener)
+  },
   listBackups: () => ipcRenderer.invoke('db:backups'),
   backupNow: () => ipcRenderer.invoke('db:backupNow'),
   restoreBackup: (name) => ipcRenderer.invoke('db:restore', name),

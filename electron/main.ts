@@ -4,6 +4,7 @@ import { openDatabase, closeDatabase } from './db/connection.ts'
 import { registerIpcHandlers } from './ipc/handlers.ts'
 import { stopParser } from './parser/service.ts'
 import { onWatchUpdate, restartWatcher, scanAll, stopWatcher } from './watcher/watcher.ts'
+import { initUpdater, checkForUpdate } from './update/updater.ts'
 
 const DIST_ELECTRON = __dirname
 const DIST = path.join(DIST_ELECTRON, '../dist')
@@ -81,6 +82,11 @@ app.whenReady().then(() => {
 
   registerIpcHandlers()
   createWindow()
+
+  // Проверка обновлений при запуске — только проверка: она отмечает ссылку в
+  // подвале, а скачивание остаётся за человеком.
+  initUpdater((state) => win?.webContents.send('update:state', state))
+  void checkForUpdate()
 
   // Наблюдатель шлёт состояние в окно сам: импорт может случиться и без
   // участия пользователя, и экран должен это показать.

@@ -1,6 +1,6 @@
 {
   "name": "table-easy-app",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "Поиск товаров и сравнение цен по прайс-листам поставщиков",
   "main": "dist-electron/main.js",
@@ -10,11 +10,13 @@
     "preview": "vite preview",
     "dist:win": "vite build && electron-builder --win nsis --publish never",
     "postinstall": "electron-builder install-app-deps",
-    "check:parser": "node --no-warnings scripts/check-parser.mts"
+    "check:parser": "node --no-warnings scripts/check-parser.mts",
+    "release:win": "vite build && electron-builder --win nsis --publish always"
   },
   "dependencies": {
     "better-sqlite3": "^13.0.3",
     "chokidar": "^5.0.0",
+    "electron-updater": "^6.8.9",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
   "devDependencies": {
@@ -45,11 +47,21 @@
     },
     "nsis": {
       "oneClick": false,
-      "allowToChangeInstallationDirectory": true
+      "allowToChangeInstallationDirectory": true,
+      "perMachine": false,
+      "allowElevation": false
     },
     "directories": {
       "output": "release"
-    }
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "nurgazievrakhat",
+        "repo": "tableApp",
+        "releaseType": "release"
+      }
+    ]
   },
   "author": "nurgazievrakhat",
   "license": "UNLICENSED",

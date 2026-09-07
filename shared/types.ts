@@ -19,10 +19,12 @@ import type {
 import type { Source, SourceStatus } from '../electron/db/repo/sources.ts'
 import type { WatchState, WatchedFolder } from '../electron/watcher/watcher.ts'
 import type { PendingFile, WatchEvent } from '../electron/watcher/pipeline.ts'
+import type { UpdateState, UpdateStatus } from '../electron/update/updater.ts'
 
 export type {
   SheetSummary, SheetPreview, CandidateInfo, ColumnMap, Field, SheetWindow, ColumnCheck,
   Supplier, SupplierDetails, SupplierProfile, BackupInfo, BackupState,
+  UpdateState, UpdateStatus,
   Mapping, MappingLookup, SaveMappingInput, ImportResult,
   SearchQuery, SearchResult, SearchHit, Correction, Source, SourceStatus,
   ProductGroup, GroupedResult, LinkStats, MatchSuggestion,
@@ -89,6 +91,14 @@ export interface Api {
   readRows(
     path: string, sheet: string, from: number, count: number, headerRow?: number,
   ): Promise<SheetWindow>
+
+  /** Что сейчас с обновлением: версия, найденное, проценты скачивания. */
+  updateState(): Promise<UpdateState>
+  checkForUpdate(): Promise<UpdateState>
+  downloadUpdate(): Promise<UpdateState>
+  /** Закрывает приложение и запускает установщик. */
+  installUpdate(): Promise<void>
+  onUpdateState(cb: (state: UpdateState) => void): () => void
 
   /** Список резервных копий базы и причина, если копию не удалось снять. */
   listBackups(): Promise<BackupState>
